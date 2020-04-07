@@ -183,7 +183,7 @@ if st.sidebar.button('Delete'):
     else:
         st.error(PL_mane + " is not in the database therefore cannot be deleted")
 
-type_of_analysis = ['home', 'single', 'learning on single', 'loop numerators', 'T averaging', 'Derivative threshold estimator', 'set all parameters', 'Compare multi particles']
+type_of_analysis = ['home', 'single', 'learning on single', 'loop numerators', 'T averaging', 'Derivative threshold estimator', 'set all parameters', 'Compare multi particles', 'Compare log vs standard']
 side_selection = st.sidebar.radio('Select the type of analysis', type_of_analysis)
 
 
@@ -193,7 +193,7 @@ side_selection = st.sidebar.radio('Select the type of analysis', type_of_analysi
 # ██      ██   ██ ██   ██ ██   ██ ██  ██  ██ ██         ██    ██      ██   ██      ██
 # ██      ██   ██ ██   ██ ██   ██ ██      ██ ███████    ██    ███████ ██   ██ ███████
 if side_selection != type_of_analysis[7] and side_selection != type_of_analysis[0]:
-    if side_selection != type_of_analysis[4]:
+    if side_selection != type_of_analysis[4] and side_selection != type_of_analysis[8]:
         num_of_scan = int(st.sidebar.text_input('num of scan along a single axe', vet_param[2]))
     if side_selection != type_of_analysis[5]:
         numb_of_spect = int(st.sidebar.text_input('num of spectrum', vet_param[1]))
@@ -205,15 +205,15 @@ if side_selection != type_of_analysis[7] and side_selection != type_of_analysis[
         remove_cosmic_ray = st.sidebar.selectbox('remove cosmic ray', ('yes','no'), index = vet_param[6])
         soglia_derivata = int(st.sidebar.text_input('derivative threshold', vet_param[7]))
 
-        wave_inf = int(st.sidebar.text_input('lower limit to calculate the stokes (nm)', vet_param[8]))
-        wave_sup = int(st.sidebar.text_input('upper limit to calculate the stokes (nm)', vet_param[9]))
+        wave_inf = float(st.sidebar.text_input('lower limit to calculate the stokes (nm)', vet_param[8]))
+        wave_sup = float(st.sidebar.text_input('upper limit to calculate the stokes (nm)', vet_param[9]))
         num_bin = int(st.sidebar.text_input('num bin', vet_param[10]))
         raggio = float(st.sidebar.text_input('radius (um)', vet_param[11]))
         laser_power = float(st.sidebar.text_input('laser power (mW)', vet_param[12]))
-        AS_min = int(st.sidebar.text_input('AS min (nm)', vet_param[13]))
-        AS_max = int(st.sidebar.text_input('AS max (nm)', vet_param[14]))
-        S_min = int(st.sidebar.text_input('S min (nm)', vet_param[15]))
-        S_max = int(st.sidebar.text_input('S max (nm)', vet_param[16]))
+        AS_min = float(st.sidebar.text_input('AS min (nm)', vet_param[13]))
+        AS_max = float(st.sidebar.text_input('AS max (nm)', vet_param[14]))
+        S_min = float(st.sidebar.text_input('S min (nm)', vet_param[15]))
+        S_max = float(st.sidebar.text_input('S max (nm)', vet_param[16]))
 
         riga_y_start = int(st.sidebar.text_input('Y start delete', vet_param[17]))
         riga_y_stop = int(st.sidebar.text_input('Y stop delete', vet_param[18]))
@@ -221,9 +221,9 @@ if side_selection != type_of_analysis[7] and side_selection != type_of_analysis[
         pixel_0_y = int(st.sidebar.text_input('Y pixel for delete', vet_param[20]))
         laser_type = int(st.sidebar.text_input('laser wavelength (nm)', vet_param[21]))
         lato_cella = float(st.sidebar.text_input('single pixel size (um)', vet_param[22]))
-        temp_max = int(st.sidebar.text_input('Temp Max boundary (K)', vet_param[23]))
-        cut_min = int(st.sidebar.text_input('lower limit excluded area (nm)', vet_param[24]))
-        cut_max = int(st.sidebar.text_input('upper limit excluded area (nm)', vet_param[25]))
+        temp_max = float(st.sidebar.text_input('Temp Max boundary (K)', vet_param[23]))
+        cut_min = float(st.sidebar.text_input('lower limit excluded area (nm)', vet_param[24]))
+        cut_max = float(st.sidebar.text_input('upper limit excluded area (nm)', vet_param[25]))
         punti_cross_section_geometrica = int(st.sidebar.text_input('Geometrical Cross-section resolution', vet_param[26]))
         material = st.sidebar.text_input('Material', vet_param[32])
 
@@ -231,14 +231,14 @@ if side_selection != type_of_analysis[7] and side_selection != type_of_analysis[
         num_loop1 = int(st.sidebar.text_input('number of point for the course testing', vet_param[27]))
         num_loop2 = int(st.sidebar.text_input('number of point for the fine testing', vet_param[28]))
 
-    if side_selection == type_of_analysis[3] or side_selection == type_of_analysis[4] or side_selection == type_of_analysis[6]:
+    if side_selection == type_of_analysis[3] or side_selection == type_of_analysis[4] or side_selection == type_of_analysis[6] or side_selection == type_of_analysis[8]:
         soglia_r2 = float(st.sidebar.text_input('R2 threshold', vet_param[29]))
 
     if side_selection == type_of_analysis[1] or side_selection == type_of_analysis[2] or side_selection == type_of_analysis[6]:
         selected_scan = int(st.sidebar.text_input('selected scan', vet_param[30]))
 
     if side_selection == type_of_analysis[1] or side_selection == type_of_analysis[6]:
-        T_RT = int(st.sidebar.text_input('T reference (K)', vet_param[31]))
+        T_RT = float(st.sidebar.text_input('T reference (K)', vet_param[31]))
 
 
 if empty_save.button('Saving'):
@@ -266,16 +266,19 @@ static_store = get_static_store()
 
 file_PL = st.file_uploader("Upload dataset", type = ["csv", "txt"])
 if file_PL:
-    if side_selection != type_of_analysis[4] and side_selection != type_of_analysis[0] and side_selection != type_of_analysis[7]and side_selection != type_of_analysis[6]:
+    if side_selection != type_of_analysis[4] and side_selection != type_of_analysis[0] and side_selection != type_of_analysis[7] and side_selection != type_of_analysis[6] and side_selection != type_of_analysis[8]:
 
         if side_selection != type_of_analysis[5]:
             scelta = st.radio('type of parameters',('standard scale', 'log scale'))
+            log_name = ''
             if scelta == 'log scale':
                 st.latex(r'''\ln{\left(\frac{I_1}{I_2}\right)} = \frac{1}{\lambda}\left[\frac{\hbar c}{k_b} \left(\frac{1}{T_2} - \frac{1}{T_1} \right)\right] + \frac{\hbar c}{k_b \lambda_{laser}}\left(\frac{1}{T_1} - \frac{1}{T_2} \right) +  \ln{\left(\frac{P_1}{P_2}\right)}''')
                 log_scale = 1
+                log_name = '_log'
             else:
                 st.latex(r'''\frac{I_1}{I_2} =  \frac{P_1}{P_2} \frac{\left(e^{\frac{\hbar c}{k_b T_2} \left(\frac{1}{\lambda} - \frac{1}{\lambda_{laser}}\right)} - 1\right)}{\left(e^{\frac{\hbar c}{k_b T_1} \left(\frac{1}{\lambda} - \frac{1}{\lambda_{laser}} \right)} - 1 \right)}''')
                 log_scale = 0
+                log_name = ''
         else:
             log_scale = 0
 
@@ -284,7 +287,7 @@ if file_PL:
             if side_selection == type_of_analysis[1] or side_selection == type_of_analysis[2] or side_selection == type_of_analysis[3]:
                 misure = mp(raw_data, num_of_scan=num_of_scan, log_scale = log_scale,
                             bkg_position = bkg_position, soglia_derivata = soglia_derivata, remove_cosmic_ray = remove_cosmic_ray,
-                            nome_file = PL_mane, x_bkg = x_bkg, y_bkg = y_bkg, material = material)
+                            nome_file = PL_mane+log_name, x_bkg = x_bkg, y_bkg = y_bkg, material = material+log_name)
             if side_selection == type_of_analysis[1]:
                 save = 'yes'
                 _, save_matr, save_matr2 = misure.good_to_go(wave_inf = wave_inf, wave_sup =wave_sup, num_bin = num_bin,  numb_of_spect = numb_of_spect, raggio = raggio, laser_power = laser_power,
@@ -293,8 +296,8 @@ if file_PL:
                                   punti_cross_section_geometrica = punti_cross_section_geometrica)
 
                 st.write("File Download")
-                download_file(save_matr, PL_mane+'_power_vs_temp_single')
-                download_file(save_matr2, PL_mane+'_compare')
+                download_file(save_matr, PL_mane+log_name+'_power_vs_temp_single')
+                download_file(save_matr2, PL_mane+log_name+'_compare')
 
             if side_selection == type_of_analysis[2]:
                 save = 'no'
@@ -305,7 +308,7 @@ if file_PL:
                 empty_plot = st.empty()
                 empty_text = st.empty()
                 save_matr = loop().T_background_calc(empty_bar, empty_bar2, empty_write, empty_write2,empty_plot,empty_text,
-                                misure = misure, PL_mane = PL_mane, salva = 'no', num_loop1 = num_loop1, num_loop2 =num_loop2, punti_cross_section_geometrica = punti_cross_section_geometrica,
+                                misure = misure, PL_mane = PL_mane+log_name, salva = 'no', num_loop1 = num_loop1, num_loop2 =num_loop2, punti_cross_section_geometrica = punti_cross_section_geometrica,
                                   wave_inf = wave_inf, wave_sup =wave_sup, num_bin = num_bin,  numb_of_spect = numb_of_spect, raggio = raggio, laser_power = laser_power, AS_min = AS_min,
                                   AS_max = AS_max, S_max = S_max, S_min = S_min, lato_cella = lato_cella, temp_max = temp_max, cut_min = cut_min, cut_max = cut_max,
                                   riga_y_start = riga_y_start, riga_y_stop =riga_y_stop, pixel_0 = [pixel_0_x,pixel_0_y], laser_type = laser_type, selected_scan = selected_scan)
@@ -324,7 +327,7 @@ if file_PL:
                 st.pyplot()
 
                 st.write("File Download")
-                download_file(save_matr, PL_mane+'_power_vs_temp_single_after_learning')
+                download_file(save_matr, PL_mane+log_name+'_power_vs_temp_single_after_learning')
 
             if side_selection == type_of_analysis[3]:
                 save = 'no'
@@ -337,16 +340,16 @@ if file_PL:
                 empty_plot = st.empty()
                 empty_text = st.empty()
                 save_matr = loop().switch_numeratore(empty_top_write, empty_top_bar, empty_bar, empty_bar2, empty_write, empty_write2,empty_plot,empty_text,
-                                misure = misure, PL_mane = PL_mane, salva = 'no', num_loop1 = num_loop1, num_loop2 =num_loop2, punti_cross_section_geometrica = punti_cross_section_geometrica,
+                                misure = misure, PL_mane = PL_mane+log_name, salva = 'no', num_loop1 = num_loop1, num_loop2 =num_loop2, punti_cross_section_geometrica = punti_cross_section_geometrica,
                                   wave_inf = wave_inf, wave_sup =wave_sup, num_bin = num_bin,  numb_of_spect = numb_of_spect, raggio = raggio, laser_power = laser_power, AS_min = AS_min,
                                   AS_max = AS_max, S_max = S_max, S_min = S_min, lato_cella = lato_cella, temp_max = temp_max, cut_min = cut_min, cut_max = cut_max,
                                   riga_y_start = riga_y_start, riga_y_stop =riga_y_stop, pixel_0 = [pixel_0_x,pixel_0_y], laser_type = laser_type)
                 matr_powers_quality_selected, average_power_temp, average_power_temp_quality_selected = loop().T_averageing(data = save_matr, numb_of_spect=numb_of_spect, soglia_r2 = soglia_r2)
                 st.write("File Download")
-                download_file(save_matr, PL_mane+'_power_vs_temp_over_loop')
-                download_file(matr_powers_quality_selected, PL_mane+'_powers_quality_selected')
-                download_file(average_power_temp, PL_mane+'_average_power_vs_temp')
-                download_file(average_power_temp_quality_selected, PL_mane+'_average_power_vs_temp_quality_selected')
+                download_file(save_matr, PL_mane+log_name+'_power_vs_temp_over_loop')
+                download_file(matr_powers_quality_selected, PL_mane+log_name+'_powers_quality_selected')
+                download_file(average_power_temp, PL_mane+log_name+'_average_power_vs_temp')
+                download_file(average_power_temp_quality_selected, PL_mane+log_name+'_average_power_vs_temp_quality_selected')
             if side_selection == type_of_analysis[5]:
                 preprocess(raw_data, num_of_scan).calc_deriv_thershold()
 
@@ -365,6 +368,30 @@ if file_PL:
             download_file(matr_powers_quality_selected, PL_mane+'_powers_quality_selected')
             download_file(average_power_temp, PL_mane+'_average_power_vs_temp')
             download_file(average_power_temp_quality_selected, PL_mane+'_average_power_vs_temp_quality_selected')
+
+    elif side_selection == type_of_analysis[8]:
+        file_PL2 = st.file_uploader("Upload second dataset (red line)", type = ["csv", "txt"])
+        if st.button("Start"):
+            file_PL = pd.DataFrame(file_PL)
+            file_PL[0] = file_PL[0].str.replace('\r\n','')
+            file_PL = file_PL[0].str.split(",", expand=True)
+            colonne = file_PL.iloc[0].tolist()
+            file_PL.columns = colonne
+            file_PL = file_PL.drop([0], axis=0)
+            file_PL = file_PL.apply(pd.to_numeric, downcast='float')
+
+            file_PL2 = pd.DataFrame(file_PL2)
+            file_PL2[0] = file_PL2[0].str.replace('\r\n','')
+            file_PL2 = file_PL2[0].str.split(",", expand=True)
+            colonne = file_PL2.iloc[0].tolist()
+            file_PL2.columns = colonne
+            file_PL2 = file_PL2.drop([0], axis=0)
+            file_PL2 = file_PL2.apply(pd.to_numeric, downcast='float')
+
+            T_quality_selected, _, average_T_quality_selected = loop().T_averageing(data = file_PL, numb_of_spect=numb_of_spect, soglia_r2 = soglia_r2, on_plot = False)
+            T_quality_selected2, _, average_T_quality_selected2 = loop().T_averageing(data = file_PL2, numb_of_spect=numb_of_spect, soglia_r2 = soglia_r2, on_plot = False)
+            loop().log_standard_plot(file_PL, T_quality_selected, average_T_quality_selected,
+                                     file_PL2, T_quality_selected2, average_T_quality_selected2, numb_of_spect)
 
     elif side_selection == type_of_analysis[7]:
         data_concat = pd.DataFrame()

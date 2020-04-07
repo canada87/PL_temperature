@@ -275,6 +275,7 @@ class spectral_anaisi:
             return p0*numeratore/denominatore
 
         data_cut_x, data_cut_y = self.data_x, self.data_y
+        data_cut_x = np.asarray(data_cut_x)
 
         T1 = np.zeros((self.number_of_scan))
         P1 = np.zeros((self.number_of_scan))
@@ -317,6 +318,8 @@ class spectral_anaisi:
                 ss_res = 1
             r2[imatr] = 1- (ss_res/ss_tot)
 
+
+
             ############################################################
             p = len(popt)
             n = len(data_cut_x)
@@ -349,7 +352,7 @@ class spectral_anaisi:
             kb = 8.617*1e-5
             h_bar = 4.1356*1e-15
             c = 299792458
-            return (((h_bar*c)/(kb*1e-9))*((1/T_RT)-(1/p1)))/x + p0
+            return (((h_bar*c)/(kb*1e-9))*((1/T_RT)-(1/p1)))/x + (((h_bar*c)/(kb*1e-9*laser_type))*((1/p1)-(1/T_RT))) + p0
 
         data_cut_x, data_cut_y = self.cut_data_optimal_range(AS_min, AS_max, S_min, S_max)
         data_cut_x = np.delete(data_cut_x, -1)

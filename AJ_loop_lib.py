@@ -149,7 +149,7 @@ class loop:
 
 
 
-    def T_averageing(self, data, numb_of_spect, soglia_r2 = 0.9):
+    def T_averageing(self, data, numb_of_spect, soglia_r2 = 0.9, on_plot = True):
         df_temp = pd.DataFrame()
         data_r2 = pd.DataFrame()
         data_T = pd.DataFrame()
@@ -186,36 +186,38 @@ class loop:
         par1, par2 = curve_fit(retta, x1, y2)
         y_fit2 = retta(x1, par1[0], par1[1])
 
-        ds().nuova_fig(20)
-        ds().titoli(xtag='I [mW/um^2]', ytag = 'T [k]', titolo='without quality filter')
-        for i in range(numb_of_spect):
-            ds().dati(x = data['xx0'], y = data['yy'+str(i)], colore=palette[i], scat_plot ='scat', larghezza_riga =15)
-        ds().dati(x = data['xx0'], y = data[list_col].mean(axis = 1), colore='black', scat_plot = 'scat', larghezza_riga =12)
-        ds().dati(x = data['xx0'], y = data[list_col].mean(axis = 1), x_error = x_err, y_error= data[list_col].std(axis = 1), colore='black', scat_plot = 'err')
-        ds().dati(x1, y_fit2, colore='black', descrizione=str(round(par1[0],2)) + '*X + ' + str(round(par1[1],2)))
-        ds().legenda()
-        st.pyplot()
+        if on_plot == True:
+            ds().nuova_fig(20)
+            ds().titoli(xtag='I [mW/um^2]', ytag = 'T [k]', titolo='without quality filter')
+            for i in range(numb_of_spect):
+                ds().dati(x = data['xx0'], y = data['yy'+str(i)], colore=palette[i], scat_plot ='scat', larghezza_riga =15)
+            ds().dati(x = data['xx0'], y = data[list_col].mean(axis = 1), colore='black', scat_plot = 'scat', larghezza_riga =12)
+            ds().dati(x = data['xx0'], y = data[list_col].mean(axis = 1), x_error = x_err, y_error= data[list_col].std(axis = 1), colore='black', scat_plot = 'err')
+            ds().dati(x1, y_fit2, colore='black', descrizione=str(round(par1[0],2)) + '*X + ' + str(round(par1[1],2)))
+            ds().legenda()
+            st.pyplot()
 
         y2 = np.array(temp_media_vet, dtype="float")
         par1, par2 = curve_fit(retta, x1, y2)
         y_fit2 = retta(x1, par1[0], par1[1])
 
-        ds().nuova_fig(21)
-        ds().titoli(xtag='I [mW/um^2]', ytag = 'T [k]', titolo='with quality filter')
-        for i in range(df_temp.shape[0]):
-            ds().dati(x = data['xx0'], y = df_temp.iloc[i], colore=palette[i], scat_plot ='scat', larghezza_riga =15)
-        ds().dati(x = data['xx0'], y = temp_media_vet, colore='black', scat_plot = 'scat', larghezza_riga =12)
-        ds().dati(x = data['xx0'], y = temp_media_vet, x_error = x_err, y_error= temp_sigma_vet, colore='black', scat_plot = 'err')
-        ds().dati(x1, y_fit2, colore='black', descrizione=str(round(par1[0],2)) + '*X + ' + str(round(par1[1],2)))
-        ds().legenda()
-        st.pyplot()
+        if on_plot == True:
+            ds().nuova_fig(21)
+            ds().titoli(xtag='I [mW/um^2]', ytag = 'T [k]', titolo='with quality filter')
+            for i in range(df_temp.shape[0]):
+                ds().dati(x = data['xx0'], y = df_temp.iloc[i], colore=palette[i], scat_plot ='scat', larghezza_riga =15)
+            ds().dati(x = data['xx0'], y = temp_media_vet, colore='black', scat_plot = 'scat', larghezza_riga =12)
+            ds().dati(x = data['xx0'], y = temp_media_vet, x_error = x_err, y_error= temp_sigma_vet, colore='black', scat_plot = 'err')
+            ds().dati(x1, y_fit2, colore='black', descrizione=str(round(par1[0],2)) + '*X + ' + str(round(par1[1],2)))
+            ds().legenda()
+            st.pyplot()
 
-        st.subheader('Temperature matrix')
-        st.write(data_T)
-        st.subheader('Quality matrix')
-        st.write(data_r2)
-        st.subheader('Temperature matrix after selection')
-        st.write(df_temp.T)
+            st.subheader('Temperature matrix')
+            st.write(data_T)
+            st.subheader('Quality matrix')
+            st.write(data_r2)
+            st.subheader('Temperature matrix after selection')
+            st.write(df_temp.T)
 
         average_power_temp = pd.DataFrame()
         average_power_temp['power'] = data['xx0']
@@ -234,13 +236,70 @@ class loop:
         return df_temp, average_power_temp, average_power_temp_quality_selected
 
 
+    def log_standard_plot(self, T, T_quality_selected, average_T_quality_selected,
+                          T2, T_quality_selected2, average_T_quality_selected2, numb_of_spect):
+
+        def plot1(T, colore):
+            list_col = ['yy'+str(i) for i in range(numb_of_spect)]
+            x_err = np.zeros((2, numb_of_spect))
+            x_err[0][:] = T['ex10']
+            x_err[1][:] = T['ex20']
+
+            def retta(x, p0, p1):
+                return p0*x + p1
+
+            x1 = np.array(T['xx0'], dtype="float")
+            y2 = np.array(T[list_col].mean(axis = 1), dtype="float")
+            par1, par2 = curve_fit(retta, x1, y2)
+            y_fit2 = retta(x1, par1[0], par1[1])
+
+            ds().nuova_fig(40)
+            ds().titoli(xtag='I [mW/um^2]', ytag = 'T [k]', titolo='without quality filter')
+            for i in range(numb_of_spect):
+                ds().dati(x = T['xx0'], y = T['yy'+str(i)], colore=palette[i], scat_plot ='scat', larghezza_riga =15)
+            ds().dati(x = T['xx0'], y = T[list_col].mean(axis = 1), colore=colore, scat_plot = 'scat', larghezza_riga =12)
+            ds().dati(x = T['xx0'], y = T[list_col].mean(axis = 1), x_error = x_err, y_error= T[list_col].std(axis = 1), colore=colore, scat_plot = 'err')
+            ds().dati(x1, y_fit2, colore= colore, descrizione=str(round(par1[0],2)) + '*X + ' + str(round(par1[1],2)))
+            ds().legenda()
+
+        plot1(T, 'blue')
+        plot1(T2, 'red')
+        ds().nuova_fig(40)
+        st.pyplot()
+
+        def plot2(T, T_quality_selected, average_T_quality_selected, colore):
+
+            def retta(x, p0, p1):
+                return p0*x + p1
+
+            x_err = np.zeros((2, numb_of_spect))
+            x_err[0][:] = T['ex10']
+            x_err[1][:] = T['ex20']
+
+            x1 = np.array(T['xx0'], dtype="float")
+            y2 = np.array(average_T_quality_selected['Temp'], dtype="float")
+            par1, par2 = curve_fit(retta, x1, y2)
+            y_fit2 = retta(x1, par1[0], par1[1])
+
+            ds().nuova_fig(41)
+            ds().titoli(xtag='I [mW/um^2]', ytag = 'T [k]', titolo='with quality filter')
+            for i in range(T_quality_selected.shape[0]):
+                ds().dati(x = T['xx0'], y = T_quality_selected.iloc[i], colore=palette[i], scat_plot ='scat', larghezza_riga =15)
+            ds().dati(x = T['xx0'], y = average_T_quality_selected['Temp'], colore=colore, scat_plot = 'scat', larghezza_riga =12)
+            ds().dati(x = T['xx0'], y = average_T_quality_selected['Temp'], x_error = x_err, y_error= average_T_quality_selected['Err Temp'], colore=colore, scat_plot = 'err')
+            ds().dati(x1, y_fit2, colore=colore, descrizione=str(round(par1[0],2)) + '*X + ' + str(round(par1[1],2)))
+            ds().legenda()
+
+        plot2(T, T_quality_selected, average_T_quality_selected, 'blue')
+        plot2(T2, T_quality_selected2, average_T_quality_selected2, 'red')
+        ds().nuova_fig(41)
+        st.pyplot()
+
         # ██████   █████  ██████      ██████  ██       ██████  ████████
         # ██   ██ ██   ██ ██   ██     ██   ██ ██      ██    ██    ██
         # ██████  ███████ ██████      ██████  ██      ██    ██    ██
         # ██   ██ ██   ██ ██   ██     ██      ██      ██    ██    ██
         # ██████  ██   ██ ██   ██     ██      ███████  ██████     ██
-
-
 
 
     def bar_plot(self, data_row):
