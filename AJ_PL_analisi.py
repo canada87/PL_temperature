@@ -337,7 +337,7 @@ class spectral_anaisi:
             for i in range(self.number_of_scan):
                 ds().dati(data_cut_x, data_cut_y[:,i], colore= palette[i])
                 ds().dati(x_fit, y_fit[:,i], colore=palette[i])
-            st.pyplot()
+            # st.pyplot()
 
             ds().nuova_fig(indice_fig=2, indice_subplot = 324)
             ds().titoli(xtag='nm', ytag='ratio', titolo='')
@@ -459,11 +459,11 @@ class spectral_anaisi:
                     ds().dati(media_x[j], media[j,i], colore= palette[j], scat_plot ='scat', larghezza_riga =15)
             st.pyplot()
 
-            ds().nuova_fig(indice_fig=2, indice_subplot = 324)
-            ds().titoli(xtag='nm', ytag='ratio', titolo='')
-            for i in range(self.number_of_scan):
-                for j in range(len(media[:,0])):
-                    ds().dati(media_x[j], media[j,i], colore= palette[j], scat_plot ='scat', larghezza_riga =15)
+            # ds().nuova_fig(indice_fig=2, indice_subplot = 324)
+            # ds().titoli(xtag='nm', ytag='ratio', titolo='')
+            # for i in range(self.number_of_scan):
+            #     for j in range(len(media[:,0])):
+            #         ds().dati(media_x[j], media[j,i], colore= palette[j], scat_plot ='scat', larghezza_riga =15)
 
             st.write('temperature growth')
             x = np.array(power, dtype="float")
@@ -473,10 +473,10 @@ class spectral_anaisi:
                 ds().dati(x[:], media[j,:], colore= palette[j], scat_plot ='scat', larghezza_riga =15, descrizione=str(round(media_x[j],1)))
             st.pyplot()
 
-            ds().nuova_fig(indice_fig=2, indice_subplot = 326)
-            ds().titoli(xtag='I [mW/um^2]', ytag='ratio', titolo='')
-            for j in range(len(media[:,0])):
-                ds().dati(x[:], media[j,:], colore= palette[j], scat_plot ='scat', larghezza_riga =15, descrizione=str(round(media_x[j],1)))
+            # ds().nuova_fig(indice_fig=2, indice_subplot = 326)
+            # ds().titoli(xtag='I [mW/um^2]', ytag='ratio', titolo='')
+            # for j in range(len(media[:,0])):
+            #     ds().dati(x[:], media[j,:], colore= palette[j], scat_plot ='scat', larghezza_riga =15, descrizione=str(round(media_x[j],1)))
 
 
         # ██ ███    ██ ████████ ███████ ███    ██ ███████ ██ ████████ ██    ██     ███    ███  █████  ██████

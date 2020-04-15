@@ -6,6 +6,7 @@ import pandas as pd
 from scipy.optimize import curve_fit
 import streamlit as st
 import matplotlib.pyplot as plt
+from scipy.stats.distributions import t as tstud
 
 palette = ['#a3c1ad', '#a0d6b4', '#5f9ea0', '#317873', '#49796b', '#ffb3ba', '#ffdfba', '#d0d04a', '#baffc9', '#bae1ff', '#a3c1ad', '#a0d6b4', '#5f9ea0', '#317873', '#49796b',
                    '#ffb3ba', '#ffdfba', '#d0d04a', '#baffc9', '#bae1ff', '#a3c1ad', '#a0d6b4', '#5f9ea0', '#317873', '#49796b', '#ffb3ba', '#ffdfba', '#d0d04a', '#baffc9', '#bae1ff',
@@ -140,13 +141,50 @@ class loop:
         return data
 
 
+        #  ██████  ██████  ███    ██ ███████ ██ ██████  ███████ ███    ██  ██████ ███████     ██ ███    ██ ████████ ███████ ██████  ██    ██  █████  ██
+        # ██      ██    ██ ████   ██ ██      ██ ██   ██ ██      ████   ██ ██      ██          ██ ████   ██    ██    ██      ██   ██ ██    ██ ██   ██ ██
+        # ██      ██    ██ ██ ██  ██ █████   ██ ██   ██ █████   ██ ██  ██ ██      █████       ██ ██ ██  ██    ██    █████   ██████  ██    ██ ███████ ██
+        # ██      ██    ██ ██  ██ ██ ██      ██ ██   ██ ██      ██  ██ ██ ██      ██          ██ ██  ██ ██    ██    ██      ██   ██  ██  ██  ██   ██ ██
+        #  ██████  ██████  ██   ████ ██      ██ ██████  ███████ ██   ████  ██████ ███████     ██ ██   ████    ██    ███████ ██   ██   ████   ██   ██ ███████
+
+
+    def interval_confidence(self, x_tot, y_tot):
+        def retta(x, p0, p1):
+            return p0*x + p1
+
+        par1, par2 = curve_fit(retta, x_tot, y_tot)
+        y_fit2 = retta(x_tot, par1[0], par1[1])
+
+        m = par1[0]
+        q = par1[1]
+        residual = y_tot - y_fit2
+        ss_res = np.sum(residual**2)
+        ss_tot = np.sum((y_tot - np.mean(y_tot))**2)
+        if ss_tot == 0:
+            ss_tot = 1
+            ss_res = 1
+        r2 = 1- (ss_res/ss_tot)
+
+        p = len(par1)
+        n = len(x_tot)
+        alpha = 0.05 #95% confidence interval
+        dof = max(0, len(x_tot) - len(par1)) #degree of freedom
+        tval = tstud.ppf(1.0 - alpha/2., dof) #t-student value for the dof and confidence level
+        sigma = np.diag(par2)**0.5
+        m_err = sigma[0]*tval
+        q_err = sigma[1]*tval
+
+        y_fit2_up = retta(x_tot, m+(m_err/2), q+(q_err/2))
+        y_fit2_down = retta(x_tot, m-(m_err/2), q-(q_err/2))
+
+        return y_fit2, m, m_err, q, q_err, y_fit2_up, y_fit2_down
+
+
         # ████████      █████  ██    ██ ███████ ██████   █████   ██████  ███████
         #    ██        ██   ██ ██    ██ ██      ██   ██ ██   ██ ██       ██
         #    ██        ███████ ██    ██ █████   ██████  ███████ ██   ███ █████
         #    ██        ██   ██  ██  ██  ██      ██   ██ ██   ██ ██    ██ ██
         #    ██        ██   ██   ████   ███████ ██   ██ ██   ██  ██████  ███████
-
-
 
 
     def T_averageing(self, data, numb_of_spect, soglia_r2 = 0.9, on_plot = True):
@@ -173,18 +211,26 @@ class loop:
         temp_media_vet = np.array(df_temp[list_col_df].mean(axis = 0), dtype="float")
         temp_sigma_vet = np.array(df_temp[list_col_df].std(axis = 0).fillna(0), dtype="float")
 
+#################################################################################################################
         x_err = np.zeros((2, numb_of_spect))
         x_err[0][:] = data['ex10']
         x_err[1][:] = data['ex20']
         list_col = ['yy'+str(i) for i in range(numb_of_spect)]
+        list_col_x = ['xx'+str(i) for i in range(numb_of_spect)]
 
-        def retta(x, p0, p1):
-            return p0*x + p1
+        x_tot = pd.DataFrame()
+        y_tot = pd.DataFrame()
+        for i in range(len(list_col_x)):
+            x_tot = pd.concat([x_tot, data[list_col_x[i]]])
+            y_tot = pd.concat([y_tot, data[list_col[i]]])
+
+        x_tot = x_tot[0].to_numpy()
+        y_tot = y_tot[0].to_numpy()
 
         x1 = np.array(data['xx0'], dtype="float")
         y2 = np.array(data[list_col].mean(axis = 1), dtype="float")
-        par1, par2 = curve_fit(retta, x1, y2)
-        y_fit2 = retta(x1, par1[0], par1[1])
+
+        y_fit2, m, m_err, q, q_err, y_fit2_up, y_fit2_down = self.interval_confidence(x_tot, y_tot)
 
         if on_plot == True:
             ds().nuova_fig(20)
@@ -193,13 +239,35 @@ class loop:
                 ds().dati(x = data['xx0'], y = data['yy'+str(i)], colore=palette[i], scat_plot ='scat', larghezza_riga =15)
             ds().dati(x = data['xx0'], y = data[list_col].mean(axis = 1), colore='black', scat_plot = 'scat', larghezza_riga =12)
             ds().dati(x = data['xx0'], y = data[list_col].mean(axis = 1), x_error = x_err, y_error= data[list_col].std(axis = 1), colore='black', scat_plot = 'err')
-            ds().dati(x1, y_fit2, colore='black', descrizione=str(round(par1[0],2)) + '*X + ' + str(round(par1[1],2)))
+            ds().dati(x_tot, y_fit2, colore='black', descrizione='Y = '+str(round(m,2)) + '*X + ' + str(round(q,2))+'\n'+
+                      'm = '+str(round(m,2))+' +/- '+ str(round(m_err,2))+'\n q = '+str(round(q,2))+' +/- '+ str(round(q_err,2)))
+            plt.fill_between(x_tot, y_fit2_down, y_fit2_up, color = 'black', alpha = 0.15)
             ds().legenda()
             st.pyplot()
+#################################################################################################################
 
-        y2 = np.array(temp_media_vet, dtype="float")
-        par1, par2 = curve_fit(retta, x1, y2)
-        y_fit2 = retta(x1, par1[0], par1[1])
+#################################################################################################################
+        df_temp_tot = df_temp.T
+        x_tot = pd.DataFrame()
+        y_tot = pd.DataFrame()
+        df_tot = pd.DataFrame()
+
+        for col in df_temp_tot.columns:
+            y_tot = pd.concat([y_tot, df_temp_tot[col]])
+            x_tot = pd.concat([x_tot, data['xx0']])
+
+        df_tot['x'] = x_tot[0]
+        df_tot.reset_index(inplace = True)
+        df_tot.drop(['index'], axis=1, inplace=True)
+        y_tot.reset_index(inplace = True)
+        y_tot.drop(['index'], axis=1, inplace=True)
+        df_tot['y'] = y_tot[0]
+        df_tot.dropna(inplace = True)
+
+        x_tot = df_tot['x'].to_numpy()
+        y_tot = df_tot['y'].to_numpy()
+
+        y_fit2, m, m_err, q, q_err, y_fit2_up, y_fit2_down = self.interval_confidence(x_tot, y_tot)
 
         if on_plot == True:
             ds().nuova_fig(21)
@@ -208,9 +276,12 @@ class loop:
                 ds().dati(x = data['xx0'], y = df_temp.iloc[i], colore=palette[i], scat_plot ='scat', larghezza_riga =15)
             ds().dati(x = data['xx0'], y = temp_media_vet, colore='black', scat_plot = 'scat', larghezza_riga =12)
             ds().dati(x = data['xx0'], y = temp_media_vet, x_error = x_err, y_error= temp_sigma_vet, colore='black', scat_plot = 'err')
-            ds().dati(x1, y_fit2, colore='black', descrizione=str(round(par1[0],2)) + '*X + ' + str(round(par1[1],2)))
+            ds().dati(x_tot, y_fit2, colore='black', descrizione='Y = '+str(round(m,2)) + '*X + ' + str(round(q,2))+'\n'+
+                      'm = '+str(round(m,2))+' +/- '+ str(round(m_err,2))+'\n q = '+str(round(q,2))+' +/- '+ str(round(q_err,2)))
+            plt.fill_between(x_tot, y_fit2_down, y_fit2_up, color = 'black', alpha = 0.15)
             ds().legenda()
             st.pyplot()
+#################################################################################################################
 
             st.subheader('Temperature matrix')
             st.write(data_T)
@@ -236,22 +307,34 @@ class loop:
         return df_temp, average_power_temp, average_power_temp_quality_selected
 
 
+
+        #  ██████  ██████  ███    ███ ██████   █████  ██████  ███████ ███████  ██████  ███    ██     ██████      ██      ██ ███    ██ ███████     ██████  ██       ██████  ████████
+        # ██      ██    ██ ████  ████ ██   ██ ██   ██ ██   ██ ██      ██      ██    ██ ████   ██          ██     ██      ██ ████   ██ ██          ██   ██ ██      ██    ██    ██
+        # ██      ██    ██ ██ ████ ██ ██████  ███████ ██████  █████   ███████ ██    ██ ██ ██  ██      █████      ██      ██ ██ ██  ██ █████       ██████  ██      ██    ██    ██
+        # ██      ██    ██ ██  ██  ██ ██      ██   ██ ██   ██ ██           ██ ██    ██ ██  ██ ██     ██          ██      ██ ██  ██ ██ ██          ██      ██      ██    ██    ██
+        #  ██████  ██████  ██      ██ ██      ██   ██ ██   ██ ███████ ███████  ██████  ██   ████     ███████     ███████ ██ ██   ████ ███████     ██      ███████  ██████     ██
+
+
     def log_standard_plot(self, T, T_quality_selected, average_T_quality_selected,
                           T2, T_quality_selected2, average_T_quality_selected2, numb_of_spect):
 
         def plot1(T, colore):
             list_col = ['yy'+str(i) for i in range(numb_of_spect)]
+            list_col_x = ['xx'+str(i) for i in range(numb_of_spect)]
             x_err = np.zeros((2, numb_of_spect))
             x_err[0][:] = T['ex10']
             x_err[1][:] = T['ex20']
 
-            def retta(x, p0, p1):
-                return p0*x + p1
+            x_tot = pd.DataFrame()
+            y_tot = pd.DataFrame()
+            for i in range(len(list_col)):
+                x_tot = pd.concat([x_tot, T[list_col_x[i]]])
+                y_tot = pd.concat([y_tot, T[list_col[i]]])
 
-            x1 = np.array(T['xx0'], dtype="float")
-            y2 = np.array(T[list_col].mean(axis = 1), dtype="float")
-            par1, par2 = curve_fit(retta, x1, y2)
-            y_fit2 = retta(x1, par1[0], par1[1])
+            x_tot = x_tot[0].to_numpy()
+            y_tot = y_tot[0].to_numpy()
+
+            y_fit2, m, m_err, q, q_err, y_fit2_up, y_fit2_down = self.interval_confidence(x_tot, y_tot)
 
             ds().nuova_fig(40)
             ds().titoli(xtag='I [mW/um^2]', ytag = 'T [k]', titolo='without quality filter')
@@ -259,7 +342,9 @@ class loop:
                 ds().dati(x = T['xx0'], y = T['yy'+str(i)], colore=palette[i], scat_plot ='scat', larghezza_riga =15)
             ds().dati(x = T['xx0'], y = T[list_col].mean(axis = 1), colore=colore, scat_plot = 'scat', larghezza_riga =12)
             ds().dati(x = T['xx0'], y = T[list_col].mean(axis = 1), x_error = x_err, y_error= T[list_col].std(axis = 1), colore=colore, scat_plot = 'err')
-            ds().dati(x1, y_fit2, colore= colore, descrizione=str(round(par1[0],2)) + '*X + ' + str(round(par1[1],2)))
+            ds().dati(x_tot, y_fit2, colore=colore, descrizione='Y = '+str(round(m,2)) + '*X + ' + str(round(q,2))+'\n'+
+                      'm = '+str(round(m,2))+' +/- '+ str(round(m_err,2))+'\n q = '+str(round(q,2))+' +/- '+ str(round(q_err,2)))
+            plt.fill_between(x_tot, y_fit2_down, y_fit2_up, color = 'black', alpha = 0.15)
             ds().legenda()
 
         plot1(T, 'blue')
@@ -269,8 +354,25 @@ class loop:
 
         def plot2(T, T_quality_selected, average_T_quality_selected, colore):
 
-            def retta(x, p0, p1):
-                return p0*x + p1
+            df_temp_tot = T_quality_selected.T
+            x_tot = pd.DataFrame()
+            y_tot = pd.DataFrame()
+            df_tot = pd.DataFrame()
+
+            for col in df_temp_tot.columns:
+                y_tot = pd.concat([y_tot, df_temp_tot[col]])
+                x_tot = pd.concat([x_tot, T['xx0']])
+
+            df_tot['x'] = x_tot[0]
+            df_tot.reset_index(inplace = True)
+            df_tot.drop(['index'], axis=1, inplace=True)
+            y_tot.reset_index(inplace = True)
+            y_tot.drop(['index'], axis=1, inplace=True)
+            df_tot['y'] = y_tot[0]
+            df_tot.dropna(inplace = True)
+
+            x_tot = df_tot['x'].to_numpy()
+            y_tot = df_tot['y'].to_numpy()
 
             x_err = np.zeros((2, numb_of_spect))
             x_err[0][:] = T['ex10']
@@ -278,8 +380,8 @@ class loop:
 
             x1 = np.array(T['xx0'], dtype="float")
             y2 = np.array(average_T_quality_selected['Temp'], dtype="float")
-            par1, par2 = curve_fit(retta, x1, y2)
-            y_fit2 = retta(x1, par1[0], par1[1])
+
+            y_fit2, m, m_err, q, q_err, y_fit2_up, y_fit2_down = self.interval_confidence(x_tot, y_tot)
 
             ds().nuova_fig(41)
             ds().titoli(xtag='I [mW/um^2]', ytag = 'T [k]', titolo='with quality filter')
@@ -287,7 +389,9 @@ class loop:
                 ds().dati(x = T['xx0'], y = T_quality_selected.iloc[i], colore=palette[i], scat_plot ='scat', larghezza_riga =15)
             ds().dati(x = T['xx0'], y = average_T_quality_selected['Temp'], colore=colore, scat_plot = 'scat', larghezza_riga =12)
             ds().dati(x = T['xx0'], y = average_T_quality_selected['Temp'], x_error = x_err, y_error= average_T_quality_selected['Err Temp'], colore=colore, scat_plot = 'err')
-            ds().dati(x1, y_fit2, colore=colore, descrizione=str(round(par1[0],2)) + '*X + ' + str(round(par1[1],2)))
+            ds().dati(x_tot, y_fit2, colore=colore, descrizione='Y = '+str(round(m,2)) + '*X + ' + str(round(q,2))+'\n'+
+                      'm = '+str(round(m,2))+' +/- '+ str(round(m_err,2))+'\n q = '+str(round(q,2))+' +/- '+ str(round(q_err,2)))
+            plt.fill_between(x_tot, y_fit2_down, y_fit2_up, color = 'black', alpha = 0.15)
             ds().legenda()
 
         plot2(T, T_quality_selected, average_T_quality_selected, 'blue')

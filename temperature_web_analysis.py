@@ -15,6 +15,7 @@ import gspread
 from oauth2client.service_account import  ServiceAccountCredentials
 
 from scipy.optimize import curve_fit
+from scipy.stats.distributions import t as tstud
 
 from typing import Dict
 
@@ -319,10 +320,34 @@ if file_PL:
                 par1, par2 = curve_fit(retta, x1, y2)
                 y_fit2 = retta(x1, par1[0], par1[1])
 
+                m = par1[0]
+                q = par1[1]
+                residual = y2 - y_fit2
+                ss_res = np.sum(residual**2)
+                ss_tot = np.sum((y2 - np.mean(y2))**2)
+                if ss_tot == 0:
+                    ss_tot = 1
+                    ss_res = 1
+                r2 = 1- (ss_res/ss_tot)
+
+                p = len(par1)
+                n = len(x1)
+                alpha = 0.05 #95% confidence interval
+                dof = max(0, len(x1) - len(par1)) #degree of freedom
+                tval = tstud.ppf(1.0 - alpha/2., dof) #t-student value for the dof and confidence level
+                sigma = np.diag(par2)**0.5
+                m_err = sigma[0]*tval
+                q_err = sigma[1]*tval
+
+                y_fit2_up = retta(x1, m+(m_err/2), q+(q_err/2))
+                y_fit2_down = retta(x1, m-(m_err/2), q-(q_err/2))
+
                 ds().nuova_fig(indice_fig=15)
                 ds().titoli(xtag='I [mW/um^2]', ytag = 'T [k]', titolo='')
                 ds().dati(save_matr['xx0'], save_matr['yy0'], x_error = [save_matr['ex10'], save_matr['ex20']], y_error = save_matr['ey0'], scat_plot = 'err')
-                ds().dati(x1, y_fit2, colore='black', descrizione=str(round(par1[0],2)) + '*X + ' + str(round(par1[1],2)))
+                ds().dati(x1, y_fit2, colore='black', descrizione=str(round(par1[0],2)) + '*X + ' + str(round(par1[1],2))+'\n'+
+                          str(round(m,2))+' +/- '+ str(round(m_err,2))+'\n'+str(round(q,2))+' +/- '+ str(round(q_err,2)))
+                plt.fill_between(x1, y_fit2_down, y_fit2_up, color = 'black', alpha = 0.15)
                 ds().legenda()
                 st.pyplot()
 

@@ -253,7 +253,7 @@ class disegna:
             h2, l2 = ax2.get_legend_handles_labels()
             htot = h1 + h2
             ltot = l1 + l2
-        ax1.legend(htot, ltot, loc=1).get_frame().set_alpha(0.4)
+        ax1.legend(htot, ltot, loc=2).get_frame().set_alpha(0.4)
         # ax1.legend(htot, ltot, loc=9, bbox_to_anchor=(0,0.99,1,.102), ncol=3, borderaxespad=0).get_frame().set_alpha(0.4)
 
 

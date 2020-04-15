@@ -12,7 +12,9 @@ import pandas as pd
 import pickle
 import streamlit as st
 
+from scipy.stats.distributions import t as tstud
 from scipy.optimize import curve_fit
+import matplotlib.pyplot as plt
 
 palette = ['#a3c1ad', '#a0d6b4', '#5f9ea0', '#317873', '#49796b', '#ffb3ba', '#ffdfba', '#d0d04a', '#baffc9', '#bae1ff', '#a3c1ad', '#a0d6b4', '#5f9ea0', '#317873', '#49796b',
                    '#ffb3ba', '#ffdfba', '#d0d04a', '#baffc9', '#bae1ff', '#a3c1ad', '#a0d6b4', '#5f9ea0', '#317873', '#49796b', '#ffb3ba', '#ffdfba', '#d0d04a', '#baffc9', '#bae1ff',
@@ -298,7 +300,7 @@ class mapping:
             st.text('fit with the raman function')
         T_raman, R2_raman, _, ET_raman, _ = sa(PL_ratio_raman[0], PL_ratio_raman[1], salva, len(y_smooth[0]), temp_max = temp_max).temperature_Raman(S_min =S_min, T_RT = T_RT, laser_type = laser_type)
 
-        # sa(PL_ratio_raman[0], PL_ratio_raman[1], salva, len(y_smooth[0]), temp_max = temp_max).ratio_vs_power(average_intensity_new, S_min = S_min, S_max = S_max, AS_min = AS_min, AS_max = AS_max, T_RT = T_RT, laser_type = laser_type)
+        sa(PL_ratio_raman[0], PL_ratio_raman[1], salva, len(y_smooth[0]), temp_max = temp_max).ratio_vs_power(average_intensity_new, S_min = S_min, S_max = S_max, AS_min = AS_min, AS_max = AS_max, T_RT = T_RT, laser_type = laser_type)
         if salva == 'yes':
             st.text('Logaritmic scale')
         T_log, R2_log, _, ET_log, _ = sa(PL_ratio_raman[0], PL_ratio_raman[1], salva, len(y_smooth[0]), temp_max = temp_max).log_ratio(S_min = S_max, S_max = S_max, AS_min = AS_min, AS_max = AS_max, T_RT = T_RT, laser_type = laser_type)
@@ -323,24 +325,49 @@ class mapping:
             return p0*x + p1
 
         x1 = np.array(average_intensity_new, dtype="float")
-
         y2 = np.array(T_raman, dtype="float")
         par1, par2 = curve_fit(retta, x1, y2)
         y_fit2 = retta(x1, par1[0], par1[1])
+
+        m = par1[0]
+        q = par1[1]
+        residual = y2 - y_fit2
+        ss_res = np.sum(residual**2)
+        ss_tot = np.sum((y2 - np.mean(y2))**2)
+        if ss_tot == 0:
+            ss_tot = 1
+            ss_res = 1
+        r2 = 1- (ss_res/ss_tot)
+
+        p = len(par1)
+        n = len(x1)
+        alpha = 0.05 #95% confidence interval
+        dof = max(0, len(x1) - len(par1)) #degree of freedom
+        tval = tstud.ppf(1.0 - alpha/2., dof) #t-student value for the dof and confidence level
+        sigma = np.diag(par2)**0.5
+        m_err = sigma[0]*tval
+        q_err = sigma[1]*tval
+
+        y_fit2_up = retta(x1, m+(m_err/2), q+(q_err/2))
+        y_fit2_down = retta(x1, m-(m_err/2), q-(q_err/2))
 
 #####################################################################
         if salva == 'yes':
             ds().nuova_fig(indice_fig=6)
             ds().titoli(xtag='I [mW/um^2]', ytag = 'T [k]', titolo='')
             ds().dati(average_intensity_new, T_raman, x_error = average_intensity_err_new, y_error = ET_raman, scat_plot = 'err')
-            ds().dati(x1, y_fit2, colore='black', descrizione=str(round(par1[0],2)) + '*X + ' + str(round(par1[1],2)))
+            ds().dati(x1, y_fit2, colore='black', descrizione=str(round(par1[0],2)) + '*X + ' + str(round(par1[1],2))+'\n'+
+                      str(round(m,2))+' +/- '+ str(round(m_err,2))+'\n'+str(round(q,2))+' +/- '+ str(round(q_err,2)))
+            plt.fill_between(x1, y_fit2_down, y_fit2_up, color = 'black', alpha = 0.15)
             ds().legenda()
             st.pyplot()
 
             ds().nuova_fig(indice_fig=2, indice_subplot =325)
             ds().titoli(xtag='I [mW/um^2]', ytag = 'T [k]', titolo='')
             ds().dati(average_intensity_new, T_raman, x_error = average_intensity_err_new, y_error = ET_raman, scat_plot = 'err')
-            ds().dati(x1, y_fit2, colore='black', descrizione=str(round(par1[0],2)) + '*X + ' + str(round(par1[1],2)))
+            ds().dati(x1, y_fit2, colore='black', descrizione=str(round(par1[0],2)) + '*X + ' + str(round(par1[1],2))+'\n'+
+                      str(round(m,2))+' +/- '+ str(round(m_err,2))+'\n'+str(round(q,2))+' +/- '+ str(round(q_err,2)))
+            plt.fill_between(x1, y_fit2_down, y_fit2_up, color = 'black', alpha = 0.15)
             ds().legenda()
 
         # if salva != 'yes':
