@@ -148,7 +148,10 @@ if st.checkbox('Parameters Legend'):
 
 
 if st.checkbox('table database'):
-    st.table(df)
+    st.subheader('file names')
+    st.dataframe(df.T['PL_name'].tolist())
+    st.subheader('Parameters')
+    st.dataframe(df.T.reset_index(drop=True).drop(['index'], axis = 1))
     download_file(df, 'Parameters_table')
 
 PL_name_temp = ''
@@ -167,6 +170,8 @@ if scelta == 'load':
                  df[PL_mane]['pixel_for_delte_y'], df[PL_mane]['laser_type'], df[PL_mane]['pixel_size'], df[PL_mane]['temp_max'],
                  df[PL_mane]['cut_min'], df[PL_mane]['cut_max'], df[PL_mane]['resolution_geometrical_cross_section'], df[PL_mane]['num_loop1'],
                  df[PL_mane]['num_loop2'], df[PL_mane]['threshold_r2'], df[PL_mane]['selected_scan'], df[PL_mane]['T_RT'], df[PL_mane]['material']]
+        st.subheader('Selected Parameters')
+        st.write(df[PL_mane].drop(['index', 'PL_name']))
     else:
         st.error('The selected name is not in the database')
 elif scelta == 'new':
