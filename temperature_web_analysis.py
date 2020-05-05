@@ -275,16 +275,20 @@ if file_PL:
     if side_selection != type_of_analysis[4] and side_selection != type_of_analysis[0] and side_selection != type_of_analysis[7] and side_selection != type_of_analysis[6] and side_selection != type_of_analysis[8]:
 
         if side_selection != type_of_analysis[5]:
-            scelta = st.radio('type of parameters',('standard scale', 'log scale'))
+            scelta2 = st.radio('type of parameters',('standard scale', 'log scale', 'direct log'))
             log_name = ''
-            if scelta == 'log scale':
+            if scelta2 == 'log scale':
                 st.latex(r'''\ln{\left(\frac{I_1}{I_2}\right)} = \frac{1}{\lambda}\left[\frac{\hbar c}{k_b} \left(\frac{1}{T_2} - \frac{1}{T_1} \right)\right] + \frac{\hbar c}{k_b \lambda_{laser}}\left(\frac{1}{T_1} - \frac{1}{T_2} \right) +  \ln{\left(\frac{P_1}{P_2}\right)}''')
                 log_scale = 1
                 log_name = '_log'
-            else:
+            elif scelta2 == 'standard scale':
                 st.latex(r'''\frac{I_1}{I_2} =  \frac{P_1}{P_2} \frac{\left(e^{\frac{\hbar c}{k_b T_2} \left(\frac{1}{\lambda} - \frac{1}{\lambda_{laser}}\right)} - 1\right)}{\left(e^{\frac{\hbar c}{k_b T_1} \left(\frac{1}{\lambda} - \frac{1}{\lambda_{laser}} \right)} - 1 \right)}''')
                 log_scale = 0
                 log_name = ''
+            elif scelta2 == 'direct log':
+                st.latex(r'''T_1 = \frac{\frac{\hbar c}{k_b} \left( \frac{1}{\lambda_{laser}} - \frac{1}{\lambda} \right)}{ \ln{\frac{I_1}{I_2}} - \ln{\frac{P1}{P2}} + \frac{\hbar c}{k_b T_2} \left( \frac{1}{\lambda_{laser}} - \frac{1}{\lambda} \right)}''')
+                log_scale = 2
+                log_name = '_direct'
         else:
             log_scale = 0
 

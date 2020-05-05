@@ -300,7 +300,8 @@ class mapping:
             st.text('fit with the raman function')
         T_raman, R2_raman, _, ET_raman, _ = sa(PL_ratio_raman[0], PL_ratio_raman[1], salva, len(y_smooth[0]), temp_max = temp_max).temperature_Raman(S_min =S_min, T_RT = T_RT, laser_type = laser_type)
 
-        sa(PL_ratio_raman[0], PL_ratio_raman[1], salva, len(y_smooth[0]), temp_max = temp_max).ratio_vs_power(average_intensity_new, S_min = S_min, S_max = S_max, AS_min = AS_min, AS_max = AS_max, T_RT = T_RT, laser_type = laser_type)
+        T_dense, ET_dense = sa(PL_ratio_raman[0], PL_ratio_raman[1], salva, len(y_smooth[0]), temp_max = temp_max).ratio_vs_power(average_intensity_new, S_min = S_min, S_max = S_max, AS_min = AS_min, AS_max = AS_max,
+                                                                                                                                  T_RT = T_RT, laser_type = laser_type, selected_scan = selected_scan)
         if salva == 'yes':
             st.text('Logaritmic scale')
         T_log, R2_log, _, ET_log, _ = sa(PL_ratio_raman[0], PL_ratio_raman[1], salva, len(y_smooth[0]), temp_max = temp_max).log_ratio(S_min = S_max, S_max = S_max, AS_min = AS_min, AS_max = AS_max, T_RT = T_RT, laser_type = laser_type)
@@ -311,7 +312,10 @@ class mapping:
             T_raman = T_log
             R2_raman = R2_log
             ET_raman = ET_log
-
+        elif self.log_scale == 2:
+            T_raman = T_dense.tolist()
+            R2_raman = [1 for i in range(len(T_dense))]
+            ET_raman = ET_dense.tolist()
 
         # ███████ ██ ████████
         # ██      ██    ██
