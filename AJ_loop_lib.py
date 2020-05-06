@@ -187,7 +187,7 @@ class loop:
         #    ██        ██   ██   ████   ███████ ██   ██ ██   ██  ██████  ███████
 
 
-    def T_averageing(self, data, numb_of_spect, soglia_r2 = 0.9, on_plot = True):
+    def T_averageing(self, data, numb_of_spect, soglia_r2 = 0.9, on_plot = True, on_plot2 = True):
         df_temp = pd.DataFrame()
         data_r2 = pd.DataFrame()
         data_T = pd.DataFrame()
@@ -269,7 +269,7 @@ class loop:
 
         y_fit2, m, m_err, q, q_err, y_fit2_up, y_fit2_down = self.interval_confidence(x_tot, y_tot)
 
-        if on_plot == True:
+        if on_plot2 == True:
             ds().nuova_fig(21)
             ds().titoli(xtag='I [mW/um^2]', ytag = 'T [k]', titolo='with quality filter')
             for i in range(df_temp.shape[0]):

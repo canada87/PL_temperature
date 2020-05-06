@@ -189,7 +189,7 @@ if st.sidebar.button('Delete'):
     else:
         st.error(PL_mane + " is not in the database therefore cannot be deleted")
 
-type_of_analysis = ['home', 'single', 'learning on single', 'loop numerators', 'T averaging', 'Derivative threshold estimator', 'set all parameters', 'Compare multi particles', 'Compare log vs standard']
+type_of_analysis = ['home', 'single', 'learning on single', 'loop numerators', 'T averaging', 'Derivative threshold estimator', 'set all parameters', 'Compare multi particles', 'Compare log vs standard', 'Global analysis']
 side_selection = st.sidebar.radio('Select the type of analysis', type_of_analysis)
 
 
@@ -204,7 +204,7 @@ if side_selection != type_of_analysis[7] and side_selection != type_of_analysis[
     if side_selection != type_of_analysis[5]:
         numb_of_spect = int(st.sidebar.text_input('num of spectrum', vet_param[1]))
 
-    if side_selection == type_of_analysis[1] or side_selection == type_of_analysis[2] or side_selection == type_of_analysis[3] or side_selection == type_of_analysis[6]:
+    if side_selection == type_of_analysis[1] or side_selection == type_of_analysis[2] or side_selection == type_of_analysis[3] or side_selection == type_of_analysis[6] or side_selection == type_of_analysis[9]:
         bkg_position = st.sidebar.selectbox('bkg', ('min','max'), index = vet_param[3])
         x_bkg = int(st.sidebar.text_input('X bkg pixel', vet_param[4]))
         y_bkg = int(st.sidebar.text_input('Y bkg pixel', vet_param[5]))
@@ -233,11 +233,11 @@ if side_selection != type_of_analysis[7] and side_selection != type_of_analysis[
         punti_cross_section_geometrica = int(st.sidebar.text_input('Geometrical Cross-section resolution', vet_param[26]))
         material = st.sidebar.text_input('Material', vet_param[32])
 
-    if side_selection == type_of_analysis[3] or side_selection == type_of_analysis[2] or side_selection == type_of_analysis[6]:
+    if side_selection == type_of_analysis[3] or side_selection == type_of_analysis[2] or side_selection == type_of_analysis[6] or side_selection == type_of_analysis[9]:
         num_loop1 = int(st.sidebar.text_input('number of point for the course testing', vet_param[27]))
         num_loop2 = int(st.sidebar.text_input('number of point for the fine testing', vet_param[28]))
 
-    if side_selection == type_of_analysis[3] or side_selection == type_of_analysis[4] or side_selection == type_of_analysis[6] or side_selection == type_of_analysis[8]:
+    if side_selection == type_of_analysis[3] or side_selection == type_of_analysis[4] or side_selection == type_of_analysis[6] or side_selection == type_of_analysis[8] or side_selection == type_of_analysis[9]:
         soglia_r2 = float(st.sidebar.text_input('R2 threshold', vet_param[29]))
 
     if side_selection == type_of_analysis[1] or side_selection == type_of_analysis[2] or side_selection == type_of_analysis[6]:
@@ -274,7 +274,7 @@ file_PL = st.file_uploader("Upload dataset", type = ["csv", "txt"])
 if file_PL:
     if side_selection != type_of_analysis[4] and side_selection != type_of_analysis[0] and side_selection != type_of_analysis[7] and side_selection != type_of_analysis[6] and side_selection != type_of_analysis[8]:
 
-        if side_selection != type_of_analysis[5]:
+        if side_selection != type_of_analysis[5] and side_selection != type_of_analysis[9]:
             scelta2 = st.radio('type of parameters',('standard scale', 'log scale', 'direct log'))
             log_name = ''
             if scelta2 == 'log scale':
@@ -284,7 +284,7 @@ if file_PL:
             elif scelta2 == 'standard scale':
                 st.latex(r'''\frac{I_1}{I_2} =  \frac{P_1}{P_2} \frac{\left(e^{\frac{\hbar c}{k_b T_2} \left(\frac{1}{\lambda} - \frac{1}{\lambda_{laser}}\right)} - 1\right)}{\left(e^{\frac{\hbar c}{k_b T_1} \left(\frac{1}{\lambda} - \frac{1}{\lambda_{laser}} \right)} - 1 \right)}''')
                 log_scale = 0
-                log_name = ''
+                log_name = '_standard'
             elif scelta2 == 'direct log':
                 st.latex(r'''T_1 = \frac{\frac{\hbar c}{k_b} \left( \frac{1}{\lambda_{laser}} - \frac{1}{\lambda} \right)}{ \ln{\frac{I_1}{I_2}} - \ln{\frac{P1}{P2}} + \frac{\hbar c}{k_b T_2} \left( \frac{1}{\lambda_{laser}} - \frac{1}{\lambda} \right)}''')
                 log_scale = 2
@@ -298,7 +298,7 @@ if file_PL:
                 misure = mp(raw_data, num_of_scan=num_of_scan, log_scale = log_scale,
                             bkg_position = bkg_position, soglia_derivata = soglia_derivata, remove_cosmic_ray = remove_cosmic_ray,
                             nome_file = PL_mane+log_name, x_bkg = x_bkg, y_bkg = y_bkg, material = material+log_name)
-            if side_selection == type_of_analysis[1]:
+            if side_selection == type_of_analysis[1]:#single
                 save = 'yes'
                 _, save_matr, save_matr2 = misure.good_to_go(wave_inf = wave_inf, wave_sup =wave_sup, num_bin = num_bin,  numb_of_spect = numb_of_spect, raggio = raggio, laser_power = laser_power,
                                   AS_min = AS_min, AS_max = AS_max, S_max = S_max, S_min = S_min, riga_y_start = riga_y_start, riga_y_stop =riga_y_stop, pixel_0 = [pixel_0_x, pixel_0_y], T_RT = T_RT, salva = save,
@@ -309,7 +309,7 @@ if file_PL:
                 download_file(save_matr, PL_mane+log_name+'_power_vs_temp_single')
                 download_file(save_matr2, PL_mane+log_name+'_compare')
 
-            if side_selection == type_of_analysis[2]:
+            if side_selection == type_of_analysis[2]:#learning on single
                 save = 'no'
                 empty_write = st.empty()
                 empty_bar = st.empty()
@@ -363,7 +363,7 @@ if file_PL:
                 st.write("File Download")
                 download_file(save_matr, PL_mane+log_name+'_power_vs_temp_single_after_learning')
 
-            if side_selection == type_of_analysis[3]:
+            if side_selection == type_of_analysis[3]:#loop numerator
                 save = 'no'
                 empty_top_write = st.empty()
                 empty_top_bar = st.empty()
@@ -384,10 +384,64 @@ if file_PL:
                 download_file(matr_powers_quality_selected, PL_mane+log_name+'_powers_quality_selected')
                 download_file(average_power_temp, PL_mane+log_name+'_average_power_vs_temp')
                 download_file(average_power_temp_quality_selected, PL_mane+log_name+'_average_power_vs_temp_quality_selected')
-            if side_selection == type_of_analysis[5]:
+
+            if side_selection == type_of_analysis[9]:#global analysis
+                save = 'no'
+                st.subheader('type of analysis')
+                empty_type_bar = st.empty()
+
+                empty_top_write = st.empty()
+                empty_top_bar = st.empty()
+
+                empty_write2 = st.empty()
+                empty_bar2 = st.empty()
+
+                empty_write = st.empty()
+                empty_bar = st.empty()
+
+                empty_plot = st.empty()
+                empty_text = st.empty()
+
+                log_name_vet = ['_standard', '_log', '_direct']
+                log_scale_vet = [0, 1, 2]
+
+                my_bar0 = empty_type_bar.progress(0)
+                dict_save_matr = dict()
+                for i in range(3):
+
+                    perc_progr = round(i*(100/3))
+                    my_bar0.progress(perc_progr)
+
+                    log_name = log_name_vet[i]
+                    log_scale = log_scale_vet[i]
+
+                    misure = mp(raw_data, num_of_scan=num_of_scan, log_scale = log_scale,
+                                bkg_position = bkg_position, soglia_derivata = soglia_derivata, remove_cosmic_ray = remove_cosmic_ray,
+                                nome_file = PL_mane+log_name, x_bkg = x_bkg, y_bkg = y_bkg, material = material+log_name)
+
+                    save_matr = loop().switch_numeratore(empty_top_write, empty_top_bar, empty_bar, empty_bar2, empty_write, empty_write2,empty_plot,empty_text,
+                                    misure = misure, PL_mane = PL_mane+log_name, salva = 'no', num_loop1 = num_loop1, num_loop2 =num_loop2, punti_cross_section_geometrica = punti_cross_section_geometrica,
+                                      wave_inf = wave_inf, wave_sup =wave_sup, num_bin = num_bin,  numb_of_spect = numb_of_spect, raggio = raggio, laser_power = laser_power, AS_min = AS_min,
+                                      AS_max = AS_max, S_max = S_max, S_min = S_min, lato_cella = lato_cella, temp_max = temp_max, cut_min = cut_min, cut_max = cut_max,
+                                      riga_y_start = riga_y_start, riga_y_stop =riga_y_stop, pixel_0 = [pixel_0_x,pixel_0_y], laser_type = laser_type)
+
+                    dict_save_matr[log_name] = save_matr
+
+                    st.subheader('Plot'+log_name)
+                    matr_powers_quality_selected, average_power_temp, average_power_temp_quality_selected = loop().T_averageing(data = save_matr, numb_of_spect=numb_of_spect, soglia_r2 = soglia_r2, on_plot2 = False)
+
+                    st.write("File Download")
+                    download_file(dict_save_matr[log_name], PL_mane+log_name+'_power_vs_temp_over_loop')
+
+                my_bar0.progress(100)
+
+
+
+            if side_selection == type_of_analysis[5]:#derivative threshold estimator
                 preprocess(raw_data, num_of_scan).calc_deriv_thershold()
 
-    elif side_selection == type_of_analysis[4]:
+    elif side_selection == type_of_analysis[4]:#T averaging
+        st.write('It requires "_power_vs_temp_over_loop" file generated by "loop numerators"')
         if st.button("Start"):
             file_PL = pd.DataFrame(file_PL)
             file_PL[0] = file_PL[0].str.replace('\r\n','')
@@ -403,8 +457,9 @@ if file_PL:
             download_file(average_power_temp, PL_mane+'_average_power_vs_temp')
             download_file(average_power_temp_quality_selected, PL_mane+'_average_power_vs_temp_quality_selected')
 
-    elif side_selection == type_of_analysis[8]:
+    elif side_selection == type_of_analysis[8]:#compare log vs standard
         file_PL2 = st.file_uploader("Upload second dataset (red line)", type = ["csv", "txt"])
+        st.write('It requires "_power_vs_temp_over_loop" file generated by "loop numerators"')
         if st.button("Start"):
             file_PL = pd.DataFrame(file_PL)
             file_PL[0] = file_PL[0].str.replace('\r\n','')
@@ -422,12 +477,13 @@ if file_PL:
             file_PL2 = file_PL2.drop([0], axis=0)
             file_PL2 = file_PL2.apply(pd.to_numeric, downcast='float')
 
-            T_quality_selected, _, average_T_quality_selected = loop().T_averageing(data = file_PL, numb_of_spect=numb_of_spect, soglia_r2 = soglia_r2, on_plot = False)
-            T_quality_selected2, _, average_T_quality_selected2 = loop().T_averageing(data = file_PL2, numb_of_spect=numb_of_spect, soglia_r2 = soglia_r2, on_plot = False)
+            T_quality_selected, _, average_T_quality_selected = loop().T_averageing(data = file_PL, numb_of_spect=numb_of_spect, soglia_r2 = soglia_r2, on_plot = False, on_plot2 = False)
+            T_quality_selected2, _, average_T_quality_selected2 = loop().T_averageing(data = file_PL2, numb_of_spect=numb_of_spect, soglia_r2 = soglia_r2, on_plot = False, on_plot2 = False)
             loop().log_standard_plot(file_PL, T_quality_selected, average_T_quality_selected,
                                      file_PL2, T_quality_selected2, average_T_quality_selected2, numb_of_spect)
 
-    elif side_selection == type_of_analysis[7]:
+    elif side_selection == type_of_analysis[7]:#compare muilti particles
+        st.write('It requires "_compare" file generated by "single"')
         data_concat = pd.DataFrame()
         value = file_PL.getvalue()
         data_compare = pd.DataFrame(file_PL)

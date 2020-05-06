@@ -30,7 +30,7 @@ class mapping:
     :param num_of_scan: number of scan in the 'file_PL'
     """
     def __init__(self, raw_data, num_of_scan, bkg_position = 'min', remove_cosmic_ray = 'no', soglia_derivata = 0, nome_file = 'dati', x_bkg = -1, y_bkg = -1, material = 'au', log_scale = 0):
-        st.text(nome_file)
+        # st.text(nome_file)
         self.raw_data = raw_data
         self.num_of_scan = num_of_scan
         self.remove_cosmic_ray = remove_cosmic_ray

@@ -464,13 +464,13 @@ class spectral_anaisi:
             #     for j in range(len(media[:,0])):
             #         ds().dati(media_x[j], media[j,i], colore= palette[j], scat_plot ='scat', larghezza_riga =15)
 
-            st.write('temperature growth')
-            x = np.array(power, dtype="float")
-            ds().nuova_fig(indice_fig=8)
-            ds().titoli(xtag='I [mW/um^2]', ytag='ratio', titolo='')
-            for j in range(len(media[:,0])):
-                ds().dati(x[:], media[j,:], colore= palette[j], scat_plot ='scat', larghezza_riga =15, descrizione=str(round(media_x[j],1)))
-            st.pyplot()
+            # st.write('temperature growth')
+            # x = np.array(power, dtype="float")
+            # ds().nuova_fig(indice_fig=8)
+            # ds().titoli(xtag='I [mW/um^2]', ytag='ratio', titolo='')
+            # for j in range(len(media[:,0])):
+            #     ds().dati(x[:], media[j,:], colore= palette[j], scat_plot ='scat', larghezza_riga =15, descrizione=str(round(media_x[j],1)))
+            # st.pyplot()
 
             # ds().nuova_fig(indice_fig=2, indice_subplot = 326)
             # ds().titoli(xtag='I [mW/um^2]', ytag='ratio', titolo='')
