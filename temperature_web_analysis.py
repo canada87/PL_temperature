@@ -311,10 +311,12 @@ if file_PL:
 
             if side_selection == type_of_analysis[2]:#learning on single
                 save = 'no'
-                empty_write = st.empty()
-                empty_bar = st.empty()
                 empty_write2 = st.empty()
                 empty_bar2 = st.empty()
+
+                empty_write = st.empty()
+                empty_bar = st.empty()
+
                 empty_plot = st.empty()
                 empty_text = st.empty()
                 save_matr = loop().T_background_calc(empty_bar, empty_bar2, empty_write, empty_write2,empty_plot,empty_text,
@@ -367,10 +369,14 @@ if file_PL:
                 save = 'no'
                 empty_top_write = st.empty()
                 empty_top_bar = st.empty()
-                empty_write = st.empty()
-                empty_bar = st.empty()
+
                 empty_write2 = st.empty()
                 empty_bar2 = st.empty()
+
+                empty_write = st.empty()
+                empty_bar = st.empty()
+
+
                 empty_plot = st.empty()
                 empty_text = st.empty()
                 save_matr = loop().switch_numeratore(empty_top_write, empty_top_bar, empty_bar, empty_bar2, empty_write, empty_write2,empty_plot,empty_text,
@@ -434,8 +440,6 @@ if file_PL:
                     download_file(dict_save_matr[log_name], PL_mane+log_name+'_power_vs_temp_over_loop')
 
                 my_bar0.progress(100)
-
-
 
             if side_selection == type_of_analysis[5]:#derivative threshold estimator
                 preprocess(raw_data, num_of_scan).calc_deriv_thershold()
