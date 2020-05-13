@@ -18,6 +18,7 @@ from scipy.optimize import curve_fit
 from scipy.stats.distributions import t as tstud
 
 from typing import Dict
+import zipfile
 
 # dict_param = {'PL_name':2, 'numb_of_spect':3, 'num_of_scan':4, 'bkg_position':5,
 #          'x_bkg':6, 'y_bkg':7, 'remove_cosmic_ray':8, 'soglia_derivata':9,
@@ -104,7 +105,8 @@ if st.checkbox('Type of analysis Legend'):
     st.markdown('**Derivative threshold estimator**: plot the derivative of all the spectrum allowing to chose a threshold.')
     st.markdown('**set all parameters**: display all the parameters for the analysis.')
     st.markdown('**Compare multi particles**: read multiple files with the intesity and the slope and plot a compareson.')
-
+    st.markdown('**Compare log vs standard**: read the T average from 2 files and plot both on the same graph.')
+    st.markdown('**Global analysis**: run **loop numeator** with all 3 possible equation and plot all the results.')
 if st.checkbox('Parameters Legend'):
     st.markdown('**Name file** (_PL_name_): given name for a set of parameters, it is used to name the output files from the software.')
     st.markdown('**Num of Spectrum** (_numb_of_spect_): Number of spectrum you are going to end up after the binning.')
@@ -319,7 +321,7 @@ if file_PL:
 
                 empty_plot = st.empty()
                 empty_text = st.empty()
-                save_matr = loop().T_background_calc(empty_bar, empty_bar2, empty_write, empty_write2,empty_plot,empty_text,
+                save_matr, _ = loop().T_background_calc(empty_bar, empty_bar2, empty_write, empty_write2,empty_plot,empty_text,
                                 misure = misure, PL_mane = PL_mane+log_name, salva = 'no', num_loop1 = num_loop1, num_loop2 =num_loop2, punti_cross_section_geometrica = punti_cross_section_geometrica,
                                   wave_inf = wave_inf, wave_sup =wave_sup, num_bin = num_bin,  numb_of_spect = numb_of_spect, raggio = raggio, laser_power = laser_power, AS_min = AS_min,
                                   AS_max = AS_max, S_max = S_max, S_min = S_min, lato_cella = lato_cella, temp_max = temp_max, cut_min = cut_min, cut_max = cut_max,
@@ -376,20 +378,27 @@ if file_PL:
                 empty_write = st.empty()
                 empty_bar = st.empty()
 
-
                 empty_plot = st.empty()
                 empty_text = st.empty()
-                save_matr = loop().switch_numeratore(empty_top_write, empty_top_bar, empty_bar, empty_bar2, empty_write, empty_write2,empty_plot,empty_text,
+                save_matr,matr_x_compare = loop().switch_numeratore(empty_top_write, empty_top_bar, empty_bar, empty_bar2, empty_write, empty_write2,empty_plot,empty_text,
                                 misure = misure, PL_mane = PL_mane+log_name, salva = 'no', num_loop1 = num_loop1, num_loop2 =num_loop2, punti_cross_section_geometrica = punti_cross_section_geometrica,
                                   wave_inf = wave_inf, wave_sup =wave_sup, num_bin = num_bin,  numb_of_spect = numb_of_spect, raggio = raggio, laser_power = laser_power, AS_min = AS_min,
                                   AS_max = AS_max, S_max = S_max, S_min = S_min, lato_cella = lato_cella, temp_max = temp_max, cut_min = cut_min, cut_max = cut_max,
                                   riga_y_start = riga_y_start, riga_y_stop =riga_y_stop, pixel_0 = [pixel_0_x,pixel_0_y], laser_type = laser_type)
-                matr_powers_quality_selected, average_power_temp, average_power_temp_quality_selected = loop().T_averageing(data = save_matr, numb_of_spect=numb_of_spect, soglia_r2 = soglia_r2)
+                matr_powers_quality_selected, average_power_temp, average_power_temp_quality_selected, m0 = loop().T_averageing(data = save_matr, numb_of_spect=numb_of_spect, soglia_r2 = soglia_r2)
                 st.write("File Download")
                 download_file(save_matr, PL_mane+log_name+'_power_vs_temp_over_loop')
                 download_file(matr_powers_quality_selected, PL_mane+log_name+'_powers_quality_selected')
                 download_file(average_power_temp, PL_mane+log_name+'_average_power_vs_temp')
                 download_file(average_power_temp_quality_selected, PL_mane+log_name+'_average_power_vs_temp_quality_selected')
+                save_matr2 = pd.DataFrame()
+                save_matr2['signal_quality'] = matr_x_compare['signal_quality']
+                save_matr2['signal_speed'] = m0
+                save_matr2['radius'] = matr_x_compare['radius']
+                save_matr2['laser_type'] = matr_x_compare['laser_type']
+                save_matr2['laser_power'] = matr_x_compare['laser_power']
+                save_matr2['material'] = matr_x_compare['material']
+                download_file(save_matr2, PL_mane+log_name+'_compare')
 
             if side_selection == type_of_analysis[9]:#global analysis
                 save = 'no'
@@ -413,6 +422,7 @@ if file_PL:
 
                 my_bar0 = empty_type_bar.progress(0)
                 dict_save_matr = dict()
+                dict_save_matr2 = dict()
                 for i in range(3):
 
                     perc_progr = round(i*(100/3))
@@ -425,19 +435,29 @@ if file_PL:
                                 bkg_position = bkg_position, soglia_derivata = soglia_derivata, remove_cosmic_ray = remove_cosmic_ray,
                                 nome_file = PL_mane+log_name, x_bkg = x_bkg, y_bkg = y_bkg, material = material+log_name)
 
-                    save_matr = loop().switch_numeratore(empty_top_write, empty_top_bar, empty_bar, empty_bar2, empty_write, empty_write2,empty_plot,empty_text,
+                    save_matr, matr_x_compare = loop().switch_numeratore(empty_top_write, empty_top_bar, empty_bar, empty_bar2, empty_write, empty_write2,empty_plot,empty_text,
                                     misure = misure, PL_mane = PL_mane+log_name, salva = 'no', num_loop1 = num_loop1, num_loop2 =num_loop2, punti_cross_section_geometrica = punti_cross_section_geometrica,
                                       wave_inf = wave_inf, wave_sup =wave_sup, num_bin = num_bin,  numb_of_spect = numb_of_spect, raggio = raggio, laser_power = laser_power, AS_min = AS_min,
                                       AS_max = AS_max, S_max = S_max, S_min = S_min, lato_cella = lato_cella, temp_max = temp_max, cut_min = cut_min, cut_max = cut_max,
                                       riga_y_start = riga_y_start, riga_y_stop =riga_y_stop, pixel_0 = [pixel_0_x,pixel_0_y], laser_type = laser_type)
 
                     dict_save_matr[log_name] = save_matr
+                    dict_save_matr2[log_name] = matr_x_compare
 
                     st.subheader('Plot'+log_name)
-                    matr_powers_quality_selected, average_power_temp, average_power_temp_quality_selected = loop().T_averageing(data = save_matr, numb_of_spect=numb_of_spect, soglia_r2 = soglia_r2, on_plot2 = False)
+                    matr_powers_quality_selected, average_power_temp, average_power_temp_quality_selected, m0 = loop().T_averageing(data = save_matr, numb_of_spect=numb_of_spect, soglia_r2 = soglia_r2, on_plot2 = False)
 
                     st.write("File Download")
                     download_file(dict_save_matr[log_name], PL_mane+log_name+'_power_vs_temp_over_loop')
+
+                    save_matr2 = pd.DataFrame()
+                    save_matr2['signal_quality'] = dict_save_matr2[log_name]['signal_quality']
+                    save_matr2['signal_speed'] = m0
+                    save_matr2['radius'] = dict_save_matr2[log_name]['radius']
+                    save_matr2['laser_type'] = dict_save_matr2[log_name]['laser_type']
+                    save_matr2['laser_power'] = dict_save_matr2[log_name]['laser_power']
+                    save_matr2['material'] = dict_save_matr2[log_name]['material']
+                    download_file(save_matr2, PL_mane+log_name+'_compare')
 
                 my_bar0.progress(100)
 
@@ -455,7 +475,7 @@ if file_PL:
             file_PL = file_PL.drop([0], axis=0)
             file_PL = file_PL.apply(pd.to_numeric, downcast='float')
 
-            matr_powers_quality_selected, average_power_temp, average_power_temp_quality_selected = loop().T_averageing(data = file_PL, numb_of_spect=numb_of_spect, soglia_r2 = soglia_r2)
+            matr_powers_quality_selected, average_power_temp, average_power_temp_quality_selected, _ = loop().T_averageing(data = file_PL, numb_of_spect=numb_of_spect, soglia_r2 = soglia_r2)
             st.write("File Download")
             download_file(matr_powers_quality_selected, PL_mane+'_powers_quality_selected')
             download_file(average_power_temp, PL_mane+'_average_power_vs_temp')
@@ -481,31 +501,48 @@ if file_PL:
             file_PL2 = file_PL2.drop([0], axis=0)
             file_PL2 = file_PL2.apply(pd.to_numeric, downcast='float')
 
-            T_quality_selected, _, average_T_quality_selected = loop().T_averageing(data = file_PL, numb_of_spect=numb_of_spect, soglia_r2 = soglia_r2, on_plot = False, on_plot2 = False)
-            T_quality_selected2, _, average_T_quality_selected2 = loop().T_averageing(data = file_PL2, numb_of_spect=numb_of_spect, soglia_r2 = soglia_r2, on_plot = False, on_plot2 = False)
+            T_quality_selected, _, average_T_quality_selected, _ = loop().T_averageing(data = file_PL, numb_of_spect=numb_of_spect, soglia_r2 = soglia_r2, on_plot = False, on_plot2 = False)
+            T_quality_selected2, _, average_T_quality_selected2, _ = loop().T_averageing(data = file_PL2, numb_of_spect=numb_of_spect, soglia_r2 = soglia_r2, on_plot = False, on_plot2 = False)
             loop().log_standard_plot(file_PL, T_quality_selected, average_T_quality_selected,
                                      file_PL2, T_quality_selected2, average_T_quality_selected2, numb_of_spect)
 
-    elif side_selection == type_of_analysis[7]:#compare muilti particles
-        st.write('It requires "_compare" file generated by "single"')
-        data_concat = pd.DataFrame()
-        value = file_PL.getvalue()
-        data_compare = pd.DataFrame(file_PL)
-        data_compare[0] = data_compare[0].str.replace('\r\n','')
-        data_compare = data_compare[0].str.split(",", expand=True)
-        colonne = data_compare.iloc[0].tolist()
-        data_compare.columns = colonne
-        data_compare = data_compare.drop([0], axis=0)
-        mod_type = ['signal_quality', 'signal_speed', 'radius', 'laser_type', 'laser_power']
-        data_compare[mod_type] = data_compare[mod_type].astype(float)
+else:
+    static_store.clear()  # Hack to clear list if the user clears the cache and reloads the page
 
-        if not value in static_store:
-            static_store[file_PL] = data_compare
+if side_selection == type_of_analysis[7]:#compare muilti particles
+    data_concat = pd.DataFrame()
+    uploadfile = st.file_uploader('Load zip file here as alternative to multi-drop', 'zip')
+    st.write('It requires "_compare" file generated by "single"')
+    if uploadfile or file_PL:
+        if uploadfile:
+            zf = zipfile.ZipFile(uploadfile)
+            files = dict()
+            for i, name in enumerate(zf.namelist()):
+                files[i] = pd.read_csv(zf.open(name))
+                files[i]['radius_nm'] = files[i]['radius']*1000
+                files[i]['normalized_signal_quality'] = (files[i]['signal_quality']/files[i]['laser_power'])
+                # st.write(files[i])
+                data_concat = pd.concat([data_concat, files[i]], ignore_index = False, axis=0)
+            # st.write(data_concat)
+        else:
+            if file_PL:
+                value = file_PL.getvalue()
+                data_compare = pd.DataFrame(file_PL)
+                data_compare[0] = data_compare[0].str.replace('\r\n','')
+                data_compare = data_compare[0].str.split(",", expand=True)
+                colonne = data_compare.iloc[0].tolist()
+                data_compare.columns = colonne
+                data_compare = data_compare.drop([0], axis=0)
+                mod_type = ['signal_quality', 'signal_speed', 'radius', 'laser_type', 'laser_power']
+                data_compare[mod_type] = data_compare[mod_type].astype(float)
 
-        for value in static_store:
-            static_store[value]['radius_nm'] = static_store[value]['radius']*1000
-            static_store[value]['normalized_signal_quality'] = (static_store[value]['signal_quality']/static_store[value]['laser_power'])
-            data_concat = pd.concat([data_concat, static_store[value]], ignore_index = False, axis=0)
+                if not value in static_store:
+                    static_store[file_PL] = data_compare
+
+                for value in static_store:
+                    static_store[value]['radius_nm'] = static_store[value]['radius']*1000
+                    static_store[value]['normalized_signal_quality'] = (static_store[value]['signal_quality']/static_store[value]['laser_power'])
+                    data_concat = pd.concat([data_concat, static_store[value]], ignore_index = False, axis=0)
 
         data_concat = data_concat.sort_values(by = ['radius_nm'])
         st.table(data_concat)
@@ -514,5 +551,3 @@ if file_PL:
 
         if st.button("Clear file list"):
             static_store.clear()
-else:
-    static_store.clear()  # Hack to clear list if the user clears the cache and reloads the page

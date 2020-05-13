@@ -575,7 +575,13 @@ class intensity_map:
                 intensity_sp_real[i,j] = area_particle(x[j], y[i])
 
         tot_intensity = sum(sum(intensity_sp_real))
+
+        # intensity_sp = intensity_sp/10000
+
         # intensity_sp_real[:,:] = intensity_sp_real[:,:]*(laser_power/tot_intensity)
         intensity_sp_real[:,:] = intensity_sp_real[:,:]*(laser_power/tot_intensity)/(rad*rad*3.14)
+
+        # intensity_sp_real[:,:] = intensity_sp_real[:,:]*(laser_power/sum(sum(intensity_sp)))/(rad*rad*3.14)
+        # intensity_sp_real[:,:] = intensity_sp_real[:,:]*(laser_power/sum(sum(intensity_sp)))
 
         return intensity_sp_real

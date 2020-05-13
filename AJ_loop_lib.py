@@ -28,6 +28,7 @@ class loop:
 
         indice = np.linspace(295, temp_max, num_loop1)
         T_matr = np.zeros((len(indice),3))
+        T_matr = T_matr+5
         j = 0
         empty_write.subheader('Course Tuning Reference Temperature')
         my_bar = empty_bar.progress(0)
@@ -41,16 +42,18 @@ class loop:
             T_matr[j,0] = T_RT #room temperature in K
             T_matr[j,1] = T_RT - 295#room temperature in C
             T_matr[j,2] = i# reference temperature
-            j = j + 1
-            perc_progr = round(j*(100/len(indice)))
-            my_bar.progress(perc_progr)
             ds().nuova_fig(10)
             ds().titoli(titolo='learning plot', xtag='T reference', ytag="Room Temperature")
             ds().dati([0,1000], [295,295], colore='red')
             ds().dati([295,295], [0,1000], colore='green')
             ds().dati(x = T_matr[:,2], y = T_matr[:,0], scat_plot ='scat', larghezza_riga = 15)
-            ds().range_plot(bottomX = 240, topX = 700, bottomY = 240, topY = 700)
+            ds().range_plot(bottomX = 220, topX = temp_max, bottomY = 220, topY = temp_max)
             empty_plot.pyplot()
+            if T_matr[j,1] > 0:
+                break
+            j = j + 1
+            perc_progr = round(j*(100/len(indice)))
+            my_bar.progress(perc_progr)
 
         min_abs = T_matr[0,1]
         imin_abs = 0
@@ -58,6 +61,10 @@ class loop:
             if T_matr[i,1]<min_abs:
                 min_abs = T_matr[i,1]
                 imin_abs = i
+
+        if min_abs < (220 - 295):
+            min_abs = T_matr[0,1]
+            imin_abs = 0
 
         min = np.sqrt(min_abs*min_abs)
         imin = imin_abs
@@ -87,7 +94,7 @@ class loop:
             ds().dati([295,295], [0,1000], colore='green')
             ds().dati(x = T_matr[:,2], y = T_matr[:,0], scat_plot ='scat', larghezza_riga = 15)
             ds().dati(x = T_matr2[:,2], y = T_matr2[:,0], scat_plot ='scat', larghezza_riga = 15, colore=palette[0])
-            ds().range_plot(bottomX = 240, topX = 700, bottomY = 240, topY = 700)
+            ds().range_plot(bottomX = 220, topX = temp_max, bottomY = 220, topY = temp_max)
             empty_plot.pyplot()
         min = np.sqrt(T_matr2[0,1]*T_matr2[0,1])
         imin = 0
@@ -97,7 +104,7 @@ class loop:
                 imin = i
         empty_text.subheader('Temperature of the Reference: '+str(round(T_matr2[imin,2],2))+' [K]')
 
-        _,matr,_ = misure.good_to_go(wave_inf = wave_inf, wave_sup = wave_sup, num_bin = num_bin,  numb_of_spect = numb_of_spect,  raggio = raggio, temp_max = temp_max,
+        _,matr, matr_x_compare = misure.good_to_go(wave_inf = wave_inf, wave_sup = wave_sup, num_bin = num_bin,  numb_of_spect = numb_of_spect,  raggio = raggio, temp_max = temp_max,
                                  S_min=S_min, S_max = S_max, AS_min = AS_min, AS_max = AS_max, laser_power = laser_power,  riga_y_start = riga_y_start, riga_y_stop =riga_y_stop,
                                  pixel_0 = pixel_0, laser_type = laser_type, T_RT = T_matr2[imin,2], salva = salva, lato_cella = lato_cella, cut_min = cut_min, cut_max = cut_max, selected_scan = selected_scan,
                                  punti_cross_section_geometrica = punti_cross_section_geometrica)
@@ -109,7 +116,7 @@ class loop:
         data['ex2'+str(selected_scan)] = matr['average_intensity_err_up'].tolist()
         data['ey'+str(selected_scan)] = matr['Temperature_err'].tolist()
         data['r2'+str(selected_scan)] = matr['Temperature_r2'].tolist()
-        return data
+        return data, matr_x_compare
 
 
         # ██       ██████   ██████  ██████      ███    ██ ██    ██ ███    ███ ███████ ██████   █████  ████████  ██████  ██████
@@ -128,7 +135,7 @@ class loop:
         my_bar0 = empty_top_bar.progress(0)
         data = pd.DataFrame()
         for i in range(numb_of_spect):
-            data_row = self.T_background_calc( empty_bar, empty_bar2, empty_write, empty_write2,empty_plot,empty_text,
+            data_row, matr_x_compare = self.T_background_calc( empty_bar, empty_bar2, empty_write, empty_write2,empty_plot,empty_text,
                                 misure = misure, PL_mane = PL_mane, salva = 'no', num_loop1 = num_loop1, num_loop2 = num_loop2,
                                 AS_max = AS_max, S_max = S_max, S_min = S_min, lato_cella = lato_cella, temp_max = temp_max, cut_min = cut_min, cut_max = cut_max,
                               wave_inf = wave_inf, wave_sup =wave_sup, num_bin = num_bin,  numb_of_spect = numb_of_spect, raggio = raggio, laser_power = laser_power, AS_min = AS_min,
@@ -138,7 +145,8 @@ class loop:
             perc_progr = round(i*(100/numb_of_spect))
             my_bar0.progress(perc_progr + 1)
         my_bar0.progress(100)
-        return data
+
+        return data, matr_x_compare
 
 
         #  ██████  ██████  ███    ██ ███████ ██ ██████  ███████ ███    ██  ██████ ███████     ██ ███    ██ ████████ ███████ ██████  ██    ██  █████  ██
@@ -230,7 +238,7 @@ class loop:
         x1 = np.array(data['xx0'], dtype="float")
         y2 = np.array(data[list_col].mean(axis = 1), dtype="float")
 
-        y_fit2, m, m_err, q, q_err, y_fit2_up, y_fit2_down = self.interval_confidence(x_tot, y_tot)
+        y_fit2, m0, m_err, q, q_err, y_fit2_up, y_fit2_down = self.interval_confidence(x_tot, y_tot)
 
         if on_plot == True:
             ds().nuova_fig(20)
@@ -239,8 +247,8 @@ class loop:
                 ds().dati(x = data['xx0'], y = data['yy'+str(i)], colore=palette[i], scat_plot ='scat', larghezza_riga =15)
             ds().dati(x = data['xx0'], y = data[list_col].mean(axis = 1), colore='black', scat_plot = 'scat', larghezza_riga =12)
             ds().dati(x = data['xx0'], y = data[list_col].mean(axis = 1), x_error = x_err, y_error= data[list_col].std(axis = 1), colore='black', scat_plot = 'err')
-            ds().dati(x_tot, y_fit2, colore='black', descrizione='Y = '+str(round(m,2)) + '*X + ' + str(round(q,2))+'\n'+
-                      'm = '+str(round(m,2))+' +/- '+ str(round(m_err,2))+'\n q = '+str(round(q,2))+' +/- '+ str(round(q_err,2)))
+            ds().dati(x_tot, y_fit2, colore='black', descrizione='Y = '+str(round(m0,2)) + '*X + ' + str(round(q,2))+'\n'+
+                      'm = '+str(round(m0,2))+' +/- '+ str(round(m_err,2))+'\n q = '+str(round(q,2))+' +/- '+ str(round(q_err,2)))
             plt.fill_between(x_tot, y_fit2_down, y_fit2_up, color = 'black', alpha = 0.15)
             ds().legenda()
             st.pyplot()
@@ -304,7 +312,7 @@ class loop:
         average_power_temp_quality_selected['Err power 2'] = data['ex20']
         average_power_temp_quality_selected['Err Temp'] = temp_sigma_vet
 
-        return df_temp, average_power_temp, average_power_temp_quality_selected
+        return df_temp, average_power_temp, average_power_temp_quality_selected, m0
 
 
 
