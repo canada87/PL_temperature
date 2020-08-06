@@ -53,6 +53,7 @@ class loop:
             perc_progr = round(j*(100/len(indice)))
             my_bar.progress(perc_progr)
 
+        #trova la temp piu bassa e parte da li per cercare il punto piu vicino alla room temperature
         min_abs = T_matr[0,1]
         imin_abs = 0
         for i in range(len(T_matr[:,1])):
@@ -63,6 +64,11 @@ class loop:
         if min_abs < (220 - 295):
             min_abs = T_matr[0,1]
             imin_abs = 0
+
+        # i valori non usati che erano inizialmente settati a 10 vengono risettati a -9999
+        if j<len(T_matr[:,1]):
+            for i in range(j+1,len(T_matr[:,1])):
+                T_matr[i,1] = -9999
 
         min = np.sqrt(min_abs*min_abs)
         imin = imin_abs
@@ -76,6 +82,7 @@ class loop:
 
         T_matr2 = np.zeros((len(indice),3))
         j = 0
+
         for i in indice:
             T_RT,_,_ = misure.good_to_go(wave_inf = wave_inf, wave_sup = wave_sup, num_bin = num_bin,  numb_of_spect = numb_of_spect,  raggio = raggio, temp_max = temp_max,
                                      S_min=S_min, S_max = S_max, AS_min = AS_min, AS_max = AS_max, laser_power = laser_power,  riga_y_start = riga_y_start, riga_y_stop =riga_y_stop,

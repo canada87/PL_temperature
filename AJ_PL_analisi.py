@@ -1,5 +1,4 @@
 import numpy as np
-import pickle
 from scipy.optimize import curve_fit
 from scipy.stats.distributions import t as tstud
 from AJ_function_4_analysis import size_manipulator as sm
@@ -96,7 +95,7 @@ class normalization:
 
     def bkg_map(self, laser_type = 633, bkg_position = 'min', x_bkg = -1, y_bkg = -1):
 
-        intensity_sp = np.zeros((len(self.data_y[0,:,0]),len(self.data_y[0,0,:])))
+        # intensity_sp = np.zeros((len(self.data_y[0,:,0]),len(self.data_y[0,0,:])))
 
         i650 = laser_type + 20
         i680 = i650 + 30
@@ -111,7 +110,6 @@ class normalization:
 
         sum_temp_matr = np.zeros((len(self.data_y[0,:,0]),len(self.data_y[0,0,:])))
 
-        cont = 0
         for i in range(len(self.data_y[0,:,0])):
             for j in range(len(self.data_y[0,0,:])):
                 sum_temp = 0
@@ -340,8 +338,8 @@ class spectral_anaisi:
 
 
             ############################################################
-            p = len(popt)
-            n = len(data_cut_x)
+            # p = len(popt)
+            # n = len(data_cut_x)
             alpha = 0.05 #95% confidence interval
             dof = max(0, len(data_cut_x) - len(popt)) #degree of freedom
             tval = tstud.ppf(1.0 - alpha/2., dof) #t-student value for the dof and confidence level
@@ -408,8 +406,8 @@ class spectral_anaisi:
             r2[imatr] = 1- (ss_res/ss_tot)
 
             ############################################################
-            p = len(popt)
-            n = len(data_cut_x)
+            # p = len(popt)
+            # n = len(data_cut_x)
             alpha = 0.05 #95% confidence interval
             dof = max(0, len(data_cut_x) - len(popt)) #degree of freedom
             tval = tstud.ppf(1.0 - alpha/2., dof) #t-student value for the dof and confidence level
@@ -553,7 +551,7 @@ class intensity_map:
 
         tot_intensity = sum(sum(intensity_sp))
         intensity_sp_real = np.zeros((int(len(intensity_sp[:,0])), int(len(intensity_sp[0,:]))))
-        intensity_sp_real = intensity_sp*(laser_power/tot_intensity)*1000
+        intensity_sp_real = intensity_sp*(laser_power/tot_intensity)*1000# the 1000 is in place to convert into uW
         return intensity_sp_real
 
     def fit_guass(self, x, y, xy_mesh, xc, yc, amp, intensity_sp, rad, laser_power, punti_cross_section_geometrica = 10):
