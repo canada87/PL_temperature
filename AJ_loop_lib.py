@@ -1,5 +1,3 @@
-from AJ_function_4_analysis import size_manipulator as sm
-from AJ_workflow_heatmap import mapping as mp
 import numpy as np
 from AJ_draw import disegna as ds
 import pandas as pd
@@ -28,7 +26,7 @@ class loop:
 
         indice = np.linspace(295, temp_max, num_loop1)
         T_matr = np.zeros((len(indice),3))
-        T_matr = T_matr+5
+        T_matr = T_matr+10
         j = 0
         empty_write.subheader('Course Tuning Reference Temperature')
         my_bar = empty_bar.progress(0)
@@ -75,6 +73,7 @@ class loop:
 
         delta_T = T_matr[1,2] - T_matr[0,2]
         indice = np.linspace(T_matr[imin,2]-delta_T, T_matr[imin,2]+delta_T, num_loop2)
+
         T_matr2 = np.zeros((len(indice),3))
         j = 0
         for i in indice:
@@ -165,16 +164,15 @@ class loop:
 
         m = par1[0]
         q = par1[1]
-        residual = y_tot - y_fit2
-        ss_res = np.sum(residual**2)
+        # residual = y_tot - y_fit2
+        # ss_res = np.sum(residual**2)
         ss_tot = np.sum((y_tot - np.mean(y_tot))**2)
         if ss_tot == 0:
             ss_tot = 1
-            ss_res = 1
-        r2 = 1- (ss_res/ss_tot)
-
-        p = len(par1)
-        n = len(x_tot)
+            # ss_res = 1
+        # r2 = 1- (ss_res/ss_tot)
+        # p = len(par1)
+        # n = len(x_tot)
         alpha = 0.05 #95% confidence interval
         dof = max(0, len(x_tot) - len(par1)) #degree of freedom
         tval = tstud.ppf(1.0 - alpha/2., dof) #t-student value for the dof and confidence level
@@ -234,9 +232,6 @@ class loop:
 
         x_tot = x_tot[0].to_numpy()
         y_tot = y_tot[0].to_numpy()
-
-        x1 = np.array(data['xx0'], dtype="float")
-        y2 = np.array(data[list_col].mean(axis = 1), dtype="float")
 
         y_fit2, m0, m_err, q, q_err, y_fit2_up, y_fit2_down = self.interval_confidence(x_tot, y_tot)
 
@@ -386,9 +381,6 @@ class loop:
             x_err[0][:] = T['ex10']
             x_err[1][:] = T['ex20']
 
-            x1 = np.array(T['xx0'], dtype="float")
-            y2 = np.array(average_T_quality_selected['Temp'], dtype="float")
-
             y_fit2, m, m_err, q, q_err, y_fit2_up, y_fit2_down = self.interval_confidence(x_tot, y_tot)
 
             ds().nuova_fig(41)
@@ -464,7 +456,7 @@ class loop:
             ds().legenda()
 
             ds().nuova_fig(31)
-            ds().titoli(titolo='Slope (C)', xtag='radius[nm]', ytag='T/I [k/mW/um^2]')
+            ds().titoli(titolo='Slope (C)', xtag='radius[nm]', ytag='T/I [k/uW]')
             ds().dati(x = data_medie['radius_nm'].to_numpy(), y = data_medie['signal_speed'].to_numpy(), scat_plot = 'bar', delay = delay, width = 3, descrizione=material)
             ds().dati(x = data_medie['radius_nm'].to_numpy()+delay/2, y = data_medie['signal_speed'].to_numpy(), y_error=data_medie['signal_speed_err'].to_numpy()/2, scat_plot = 'err', colore='black')
             ds().dati(x = data['radius_nm']+delay/2, y = data['signal_speed'], scat_plot ='scat', colore="blue", larghezza_riga =12, layer = 2)

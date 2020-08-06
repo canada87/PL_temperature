@@ -41,6 +41,23 @@ class data_storage:
                 kk = kk + 1
         return data_x, data_y
 
+    def load_map_multiple_files(self, number_of_scan=1):
+        file  = self.file
+        file = file.drop([0], axis=0)
+        file.rename(columns={file.columns.tolist()[0]:0}, inplace=True)
+
+        file = file[0].str.split(expand=True)
+        file = file.apply(pd.to_numeric, downcast='float').to_numpy()
+        data_x = file[:,0]
+        data_y_raw = file[:,1:]
+
+        data_y = np.zeros((len(data_x), number_of_scan, number_of_scan))
+        kk = 0
+        for i in range(number_of_scan):
+            for j in range(number_of_scan):
+                data_y[:, i, j] = data_y_raw[:,kk]
+                kk = kk + 1
+        return data_x, data_y
 
         # ███    ██  ██████  ██████  ███    ███  █████  ██      ██ ███████  █████  ████████ ██  ██████  ███    ██
         # ████   ██ ██    ██ ██   ██ ████  ████ ██   ██ ██      ██    ███  ██   ██    ██    ██ ██    ██ ████   ██
@@ -269,6 +286,7 @@ class spectral_anaisi:
             c = 299792458
             l_laser = laser_type
             w_laser = c/(l_laser*1e-9)
+            # w_laser = 0
 
             numeratore   = np.exp((h_bar*(c/(x*1e-9) - w_laser))/(kb*T_0)) - 1
             denominatore = np.exp((h_bar*(c/(x*1e-9) - w_laser))/(kb*p1)) - 1
@@ -305,6 +323,7 @@ class spectral_anaisi:
             potenza_media = potenza_media/(len(data_cut_x)-i_x_min_S)
 
             popt, pcov = curve_fit(funzione_raman, data_cut_x, data_cut_y[:,imatr], bounds=([295, potenza_media-(potenza_media/self.divP)],[self.temp_max, potenza_media+(potenza_media/self.divP)]))
+            # popt, pcov = curve_fit(funzione_raman, data_cut_x, data_cut_y[:,imatr], bounds=([295, -np.inf],[self.temp_max, np.inf]))
             y_fit[:,imatr] = funzione_raman(x_fit, popt[0], popt[1])
 
             T1[imatr] = popt[0]
@@ -492,7 +511,8 @@ class spectral_anaisi:
         if self.salva == 'yes':
             st.write('Temperature density of states')
             ds().nuova_fig(20)
-            ds().titoli(xtag='I [mW/um^2]', ytag='T [k]', titolo='')
+            # ds().titoli(xtag='I [mW/um^2]', ytag='T [k]', titolo='')
+            ds().titoli(xtag='P [uW]', ytag='T [k]', titolo='')
             for j, col in enumerate(range_of_wavelength.columns):
                 ds().dati(range_of_wavelength.index.tolist(), range_of_wavelength[col], colore = palette[j], scat_plot = 'scat', larghezza_riga = 15, descrizione=str(round(col)))
             ds().legenda()
@@ -514,6 +534,27 @@ class intensity_map:
 
     def __init__(self, salva):
         self.salva = salva
+
+    def eval_power(self, xy_mesh, intensity_sp, laser_power):
+        if self.salva == 'yes':
+            st.write('evaluating the real power on the particle')
+
+            xx, yy = xy_mesh
+
+            ds().nuova_fig(indice_fig=2, plot_dimension = '3d', indice_subplot = 322)
+            ds().titoli(titolo='original with fit')
+            ds().dati(xx, yy, scat_plot ='3D', z = intensity_sp)
+
+            ds().nuova_fig(indice_fig=9, plot_dimension = '3d')
+            ds().titoli(titolo='original with fit')
+            ds().dati(xx, yy, scat_plot ='3D', z = intensity_sp)
+            st.pyplot()
+
+
+        tot_intensity = sum(sum(intensity_sp))
+        intensity_sp_real = np.zeros((int(len(intensity_sp[:,0])), int(len(intensity_sp[0,:]))))
+        intensity_sp_real = intensity_sp*(laser_power/tot_intensity)*1000
+        return intensity_sp_real
 
     def fit_guass(self, x, y, xy_mesh, xc, yc, amp, intensity_sp, rad, laser_power, punti_cross_section_geometrica = 10):
         def gaussian_2d(xy_mesh, amp, xc, yc, sigma_x, sigma_y, theta):
@@ -563,7 +604,8 @@ class intensity_map:
                     if dist<rad:
                         valore = gaussian_2d((x_pos, y_pos), fit_params[0], fit_params[1], fit_params[2], fit_params[3], fit_params[4], fit_params[5])
                         intensity_sp_sum = intensity_sp_sum + valore
-            intensity_sp_sum = intensity_sp_sum*(2*rad/len(x_rad))*(2*rad/len(y_rad))
+            # intensity_sp_sum = intensity_sp_sum*(2*rad/len(x_rad))*(2*rad/len(y_rad))
+            intensity_sp_sum = intensity_sp_sum*(3.14*rad*rad/(len(x_rad)*len(y_rad)))
             return intensity_sp_sum
 
         if self.salva == 'yes':

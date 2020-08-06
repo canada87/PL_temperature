@@ -5,12 +5,11 @@ from AJ_workflow_preprocess import preprocess as pp
 from AJ_PL_analisi import normalization as nr
 from AJ_PL_analisi import pulizzia as pl
 from AJ_PL_analisi import spectral_anaisi as sa
-from AJ_PL_analisi import data_storage
 from AJ_PL_analisi import intensity_map as im
 import numpy as np
 import pandas as pd
-import pickle
 import streamlit as st
+import base64
 
 from scipy.stats.distributions import t as tstud
 from scipy.optimize import curve_fit
@@ -46,13 +45,18 @@ class mapping:
     def good_to_go(self, AS_min = 590, AS_max = 616, S_min = 645, S_max = 699, wave_inf = 591, wave_sup = 616, num_bin = 10, numb_of_spect = 10, laser_power = 1.75, raggio = 0.07, lato_cella = 0.05,
                    riga_y_start = 0, riga_y_stop = 1, pixel_0 = [3,0], temp_max = 550, T_RT = 295, laser_type = 633, salva = 'no', cut_min = 0, cut_max = 0, selected_scan = 0, punti_cross_section_geometrica = 10):
 
+        def download_file(data, filename):
+            testo = 'Download '+filename+'.csv'
+            csv = data.to_csv(index=False)
+            b64 = base64.b64encode(csv.encode()).decode()
+            href = f'<a href="data:file/csv;base64,{b64}" download="{filename}.csv">'+testo+'</a>'
+            st.markdown(href, unsafe_allow_html=True)
+
+
         """
         calculated the heat map
         wave_inf e wave_sup rappresentano l'intervallo in cui viene calcolato lo stokes per la heatmap
         """
-
-        # percorso = 'C:/Users/ajacassi/OneDrive/ponte/programmi/python/progetto2/analisi_dati/'
-        percorso = 'C:/Users/Max Power/OneDrive/ponte/programmi/python/progetto2/analisi_dati/'
 
         # ██       ██████   █████  ██████
         # ██      ██    ██ ██   ██ ██   ██
@@ -87,13 +91,13 @@ class mapping:
         if salva == 'yes':
             st.text('creating the intensity map')
 
-# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-#sostituisce un certo numero di righe sulla intensity map con l'intensita del pixel_0
-#serve per eliminare il rumore di fondo quando e' troppo alto in picocle porzioni del grafico
+        # ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+        #sostituisce un certo numero di righe sulla intensity map con l'intensita del pixel_0
+        #serve per eliminare il rumore di fondo quando e' troppo alto in picocle porzioni del grafico
         for i in range(0, len(PL_y[0,:,0])):# X
             for j in range(riga_y_start, riga_y_stop):# Y
                 PL_y[:,j,i] = PL_y[:, pixel_0[0], pixel_0[1]]
-# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+        # ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
         intensity_sp = np.zeros((len(PL_y[0,:,0]), len(PL_y[0,0,:])))
 
@@ -118,7 +122,7 @@ class mapping:
         y = [i*lato_cella for i in range(len(intensity_sp[0,:]))]
         xy = np.meshgrid(x,y)
 
-#####################################################################
+        #####################################################################
         if salva == 'yes':
             ds().nuova_fig(indice_fig=4)
             ds().titoli(titolo='', xtag='um', ytag='um')
@@ -127,7 +131,7 @@ class mapping:
             ds().nuova_fig(indice_fig=2, indice_subplot =321, width =15, height = 10)
             ds().titoli(titolo=self.nome_file, xtag='um', ytag='um')
             ds().dati(x, y, scat_plot ='cmap', z =intensity_sp)
-#####################################################################
+            #####################################################################
 
         # ███████  ██████  ██████  ████████     ██ ███    ██ ████████ ███████ ███    ██ ███████ ██ ████████ ██    ██
         # ██      ██    ██ ██   ██    ██        ██ ████   ██    ██    ██      ████   ██ ██      ██    ██     ██  ██
@@ -148,7 +152,7 @@ class mapping:
 
         sorted_intensity0 = sorted(sorted_intensity0, reverse = True)
 
-#####################################################################################
+        #####################################################################################
         intens_coord = np.where(intensity_sp == sorted_intensity0[0])
         if len(intens_coord) == 1:
             intens_coord_y = intens_coord[0]
@@ -156,11 +160,13 @@ class mapping:
         else:
             intens_coord_y = intens_coord[0][0]
             intens_coord_x = intens_coord[1][0]
-        xc = x[intens_coord_x]
-        yc = y[intens_coord_y]
 
-        intensity_sp2 = im(salva).fit_guass(x=x, y=y, xy_mesh= xy, amp=sorted_intensity0[0], intensity_sp=intensity_sp, xc=xc, yc=yc, rad = raggio, laser_power=laser_power, punti_cross_section_geometrica = punti_cross_section_geometrica)
-#####################################################################################
+        # xc = x[intens_coord_x]
+        # yc = y[intens_coord_y]
+        # intensity_sp2 = im(salva).fit_guass(x=x, y=y, xy_mesh= xy, amp=sorted_intensity0[0], intensity_sp=intensity_sp, xc=xc, yc=yc, rad = raggio, laser_power=laser_power, punti_cross_section_geometrica = punti_cross_section_geometrica)
+        intensity_sp2 = im(salva).eval_power(xy_mesh= xy, intensity_sp=intensity_sp, laser_power=laser_power)
+        # st.write(intensity_sp2)
+        #####################################################################################
 
         sorted_intensity = np.zeros(len(PL_y[0,:,0])*len(PL_y[0,0,:]))
 
@@ -171,7 +177,7 @@ class mapping:
                 k = k + 1
 
         sorted_intensity = sorted(sorted_intensity, reverse = True)
-        tot_intensity = sum(sorted_intensity)
+        # tot_intensity = sum(sorted_intensity)
 
         # ██████  ██ ███    ██ ███    ██ ██ ███    ██  ██████
         # ██   ██ ██ ████   ██ ████   ██ ██ ████   ██ ██
@@ -262,7 +268,7 @@ class mapping:
         y_smooth = pl(PL_x, y_smooth, len(PL_bin[0])).smoothing_fft(ncycl)
         y_smooth = pl(PL_x, y_smooth, len(PL_bin[0])).smoothing_fft(ncycl)
 
-#####################################################################
+        #####################################################################
         i_pl = 0
         for i in range(len(PL_x)):
             if PL_x[i] < S_min+1:
@@ -274,6 +280,12 @@ class mapping:
             for i in range(len(PL_bin[0,:])):
                 ds().dati(PL_x, y_smooth[:,i], colore=palette[i], descrizione= str(i))
             ds().range_plot(bottomX=AS_min, topX=S_max, bottomY=-10,  topY=100+max(y_smooth[i_pl:,0]))
+
+            save_plot = pd.DataFrame()
+            save_plot['x'] = PL_x
+            for i in range(len(PL_bin[0,:])):
+                save_plot[i] = y_smooth[:,i]
+            download_file(save_plot, self.nome_file + '_PL')
             st.pyplot()
 
             ds().nuova_fig(indice_fig=2, indice_subplot =323)
@@ -283,7 +295,7 @@ class mapping:
             ds().range_plot(bottomX=AS_min, topX=S_max, bottomY=-10,  topY=100+max(y_smooth[i_pl:,0]))
 
         signal_quality = max(y_smooth[i_pl:,0])
-#####################################################################
+        #####################################################################
 
         # ██████   █████  ████████ ██  ██████
         # ██   ██ ██   ██    ██    ██ ██    ██
@@ -291,7 +303,7 @@ class mapping:
         # ██   ██ ██   ██    ██    ██ ██    ██
         # ██   ██ ██   ██    ██    ██  ██████
 
-# y_smooth = np.zeros((len(self.data_y), self.number_of_scan))
+        # y_smooth = np.zeros((len(self.data_y), self.number_of_scan))
 
         if salva == 'yes':
             st.text('creating the ratio')
@@ -299,6 +311,13 @@ class mapping:
         if salva == 'yes':
             st.text('fit with the raman function')
         T_raman, R2_raman, _, ET_raman, _ = sa(PL_ratio_raman[0], PL_ratio_raman[1], salva, len(y_smooth[0]), temp_max = temp_max).temperature_Raman(S_min =S_min, T_RT = T_RT, laser_type = laser_type)
+
+        if salva == 'yes':
+            save_plot = pd.DataFrame()
+            save_plot['x'] = PL_ratio_raman[0]
+            for i in range(PL_ratio_raman[1].shape[1]):
+                save_plot[i] = PL_ratio_raman[1][:,i]
+            download_file(save_plot, self.nome_file + '_ratio')
 
         T_dense, ET_dense = sa(PL_ratio_raman[0], PL_ratio_raman[1], salva, len(y_smooth[0]), temp_max = temp_max).ratio_vs_power(average_intensity_new, S_min = S_min, S_max = S_max, AS_min = AS_min, AS_max = AS_max,
                                                                                                                                   T_RT = T_RT, laser_type = laser_type, selected_scan = selected_scan)
@@ -335,16 +354,15 @@ class mapping:
 
         m = par1[0]
         q = par1[1]
-        residual = y2 - y_fit2
-        ss_res = np.sum(residual**2)
+        # residual = y2 - y_fit2
+        # ss_res = np.sum(residual**2)
         ss_tot = np.sum((y2 - np.mean(y2))**2)
         if ss_tot == 0:
             ss_tot = 1
-            ss_res = 1
-        r2 = 1- (ss_res/ss_tot)
-
-        p = len(par1)
-        n = len(x1)
+            # ss_res = 1
+        # r2 = 1- (ss_res/ss_tot)
+        # p = len(par1)
+        # n = len(x1)
         alpha = 0.05 #95% confidence interval
         dof = max(0, len(x1) - len(par1)) #degree of freedom
         tval = tstud.ppf(1.0 - alpha/2., dof) #t-student value for the dof and confidence level
@@ -355,10 +373,11 @@ class mapping:
         y_fit2_up = retta(x1, m+(m_err/2), q+(q_err/2))
         y_fit2_down = retta(x1, m-(m_err/2), q-(q_err/2))
 
-#####################################################################
+        #####################################################################
         if salva == 'yes':
             ds().nuova_fig(indice_fig=6)
-            ds().titoli(xtag='I [mW/um^2]', ytag = 'T [k]', titolo='')
+            # ds().titoli(xtag='I [mW/um^2]', ytag = 'T [k]', titolo='')
+            ds().titoli(xtag='P [uW]', ytag='T [k]', titolo='')
             ds().dati(average_intensity_new, T_raman, x_error = average_intensity_err_new, y_error = ET_raman, scat_plot = 'err')
             ds().dati(x1, y_fit2, colore='black', descrizione=str(round(par1[0],2)) + '*X + ' + str(round(par1[1],2))+'\n'+
                       str(round(m,2))+' +/- '+ str(round(m_err,2))+'\n'+str(round(q,2))+' +/- '+ str(round(q_err,2)))
@@ -367,7 +386,8 @@ class mapping:
             st.pyplot()
 
             ds().nuova_fig(indice_fig=2, indice_subplot =325)
-            ds().titoli(xtag='I [mW/um^2]', ytag = 'T [k]', titolo='')
+            # ds().titoli(xtag='I [mW/um^2]', ytag = 'T [k]', titolo='')
+            ds().titoli(xtag='P [uW]', ytag='T [k]', titolo='')
             ds().dati(average_intensity_new, T_raman, x_error = average_intensity_err_new, y_error = ET_raman, scat_plot = 'err')
             ds().dati(x1, y_fit2, colore='black', descrizione=str(round(par1[0],2)) + '*X + ' + str(round(par1[1],2))+'\n'+
                       str(round(m,2))+' +/- '+ str(round(m_err,2))+'\n'+str(round(q,2))+' +/- '+ str(round(q_err,2)))
@@ -376,13 +396,13 @@ class mapping:
 
         # if salva != 'yes':
         #     ds().porta_a_finestra(chiudi = 1)
-#####################################################################
+        #####################################################################
 
-# ███████  █████  ██    ██ ███████
-# ██      ██   ██ ██    ██ ██
-# ███████ ███████ ██    ██ █████
-#      ██ ██   ██  ██  ██  ██
-# ███████ ██   ██   ████   ███████
+        # ███████  █████  ██    ██ ███████
+        # ██      ██   ██ ██    ██ ██
+        # ███████ ███████ ██    ██ █████
+        #      ██ ██   ██  ██  ██  ██
+        # ███████ ██   ██   ████   ███████
 
         matrice_salve2 = pd.DataFrame()
         matrice_salve2['average_intensity_new'] = average_intensity_new
@@ -394,7 +414,7 @@ class mapping:
 
         matrice_salve3 = pd.DataFrame()
         matrice_salve3['signal_quality'] = [signal_quality]
-        matrice_salve3['signal_speed'] = [round(par1[0],2)]
+        matrice_salve3['signal_speed'] = [round(par1[0],2)] #coefficiente angolare
         matrice_salve3['radius'] = [raggio]
         matrice_salve3['laser_type'] = [laser_type]
         matrice_salve3['laser_power'] = [laser_power]
