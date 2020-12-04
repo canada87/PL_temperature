@@ -102,15 +102,12 @@ class mapping:
         intensity_sp = np.zeros((len(PL_y[0,:,0]), len(PL_y[0,0,:])))
 
         for k in range(len(PL_y[0,:,0])):
-
             for i in range(len(PL_x)):
                 if wave_inf>PL_x[i]:
                     i591 = i
-
             for i in range(len(PL_x)):
                 if wave_sup>PL_x[i]:
                     i616 = i
-
             for j in range(self.num_of_scan):
                 sum_temp = 0
                 for i in range(i591,i616):
@@ -245,6 +242,16 @@ class mapping:
 
         col_num = [i for i in range(numb_of_spect)]
         PL_bin = sm(PL_bin).rescape(col_num)
+
+        #the code here add to all the selected spectrum the smallest value in the anistokes, so no spectrum goes below 0
+        #still experimenting with this
+        # for i in range(len(PL_x)):
+        #     if AS_min>PL_x[i]:
+        #         iAS_min = i
+        #     if AS_max>PL_x[i]:
+        #         iAS_max = i
+        # PL_bin = PL_bin + np.abs(PL_bin[iAS_min:iAS_max,:].min())
+
         average_intensity_new = np.zeros(numb_of_spect)
         average_intensity_err_new = [[i]*numb_of_spect for i in range(2)]
 
@@ -280,6 +287,7 @@ class mapping:
             for i in range(len(PL_bin[0,:])):
                 ds().dati(PL_x, y_smooth[:,i], colore=palette[i], descrizione= str(i))
             ds().range_plot(bottomX=AS_min, topX=S_max, bottomY=-10,  topY=100+max(y_smooth[i_pl:,0]))
+            # ds().range_plot(bottomX=AS_min, topX=AS_max, bottomY=-10,  topY=1000)
 
             save_plot = pd.DataFrame()
             save_plot['x'] = PL_x

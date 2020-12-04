@@ -119,12 +119,17 @@ class normalization:
 
         x_min, y_min = np.where(sum_temp_matr == sum_temp_matr.min())
 
+        if bkg_position == 'min':
+            bkg_temp = self.data_y[:,x_min[0],y_min[0]].copy()
+        else:
+            bkg_temp = self.data_y[:,x_bkg,y_bkg].copy()
+
         for i in range(len(self.data_y[0,:,0])):
             for j in range(len(self.data_y[0,0,:])):
                 if bkg_position == 'min':
-                    self.data_y[:,i,j] = self.data_y[:,i,j] - self.data_y[:,x_min[0],y_min[0]]
+                    self.data_y[:,i,j] = self.data_y[:,i,j] - bkg_temp
                 else:
-                    self.data_y[:,i,j] = self.data_y[:,i,j] - self.data_y[:,x_bkg,y_bkg]
+                    self.data_y[:,i,j] = self.data_y[:,i,j] - bkg_temp
 
         return self.data_x, self.data_y
 
