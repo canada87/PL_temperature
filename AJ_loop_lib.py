@@ -244,7 +244,7 @@ class loop:
 
         if on_plot == True:
             ds().nuova_fig(20)
-            ds().titoli(xtag='I [mW/um^2]', ytag = 'T [k]', titolo='without quality filter')
+            ds().titoli(xtag='P [uW]', ytag = 'T [k]', titolo='without quality filter')
             for i in range(numb_of_spect):
                 ds().dati(x = data['xx0'], y = data['yy'+str(i)], colore=palette[i], scat_plot ='scat', larghezza_riga =15)
             ds().dati(x = data['xx0'], y = data[list_col].mean(axis = 1), colore='black', scat_plot = 'scat', larghezza_riga =12)
@@ -281,7 +281,7 @@ class loop:
 
         if on_plot2 == True:
             ds().nuova_fig(21)
-            ds().titoli(xtag='I [mW/um^2]', ytag = 'T [k]', titolo='with quality filter')
+            ds().titoli(xtag='P [uW]', ytag = 'T [k]', titolo='with quality filter')
             for i in range(df_temp.shape[0]):
                 ds().dati(x = data['xx0'], y = df_temp.iloc[i], colore=palette[i], scat_plot ='scat', larghezza_riga =15)
             ds().dati(x = data['xx0'], y = temp_media_vet, colore='black', scat_plot = 'scat', larghezza_riga =12)
@@ -347,7 +347,7 @@ class loop:
             y_fit2, m, m_err, q, q_err, y_fit2_up, y_fit2_down = self.interval_confidence(x_tot, y_tot)
 
             ds().nuova_fig(40)
-            ds().titoli(xtag='I [mW/um^2]', ytag = 'T [k]', titolo='without quality filter')
+            ds().titoli(xtag='P [uW]', ytag = 'T [k]', titolo='without quality filter')
             for i in range(numb_of_spect):
                 ds().dati(x = T['xx0'], y = T['yy'+str(i)], colore=palette[i], scat_plot ='scat', larghezza_riga =15)
             ds().dati(x = T['xx0'], y = T[list_col].mean(axis = 1), colore=colore, scat_plot = 'scat', larghezza_riga =12)
@@ -391,7 +391,7 @@ class loop:
             y_fit2, m, m_err, q, q_err, y_fit2_up, y_fit2_down = self.interval_confidence(x_tot, y_tot)
 
             ds().nuova_fig(41)
-            ds().titoli(xtag='I [mW/um^2]', ytag = 'T [k]', titolo='with quality filter')
+            ds().titoli(xtag='P [uW]', ytag = 'T [k]', titolo='with quality filter')
             for i in range(T_quality_selected.shape[0]):
                 ds().dati(x = T['xx0'], y = T_quality_selected.iloc[i], colore=palette[i], scat_plot ='scat', larghezza_riga =15)
             ds().dati(x = T['xx0'], y = average_T_quality_selected['Temp'], colore=colore, scat_plot = 'scat', larghezza_riga =12)
